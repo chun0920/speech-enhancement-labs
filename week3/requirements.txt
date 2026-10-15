@@ -1,0 +1,8 @@
+# Same environment as Weeks 1 and 2 (conda activate se). Nothing new this week:
+#   pip install -r requirements.txt
+numpy
+scipy
+matplotlib
+soundfile
+pesq
+pystoi

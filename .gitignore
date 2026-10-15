@@ -1,0 +1,8 @@
+# results the labs create
+out/
+__pycache__/
+*.pt
+
+# your own recordings for Week 1
+week1/data/clean_speech.wav
+week1/data/noise.wav

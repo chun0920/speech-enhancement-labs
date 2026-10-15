@@ -1,0 +1,8 @@
+# Same environment as Week 1 (conda activate se), plus two metric packages:
+#   pip install -r requirements.txt
+numpy
+scipy
+matplotlib
+soundfile
+pesq
+pystoi

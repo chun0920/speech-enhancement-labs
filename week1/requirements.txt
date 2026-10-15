@@ -1,0 +1,5 @@
+# Install PyTorch first (README, setup step 3). Then:  pip install -r requirements.txt
+numpy
+scipy
+matplotlib
+soundfile
