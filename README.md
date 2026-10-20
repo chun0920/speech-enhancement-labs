@@ -3,14 +3,15 @@
 Weekly hands-on labs: from audio as numbers to training your own speech-enhancement network.
 Everything runs in a terminal on the lab's Linux server.
 
-| Week | Topic | Folder |
-|---|---|---|
-| 1 | Audio as data: tensors, a training loop, WAV files, SNR | [`week1/`](week1/) |
-| 2 | Seeing and scoring noise: STFT, spectrograms, SI-SDR / PESQ / STOI | [`week2/`](week2/) |
-| 3 | Your first enhancement network: learning to guess the mask | [`week3/`](week3/) |
+| Week | Topic | Folder | Solutions |
+|---|---|---|---|
+| 1 | Audio as data: tensors, a training loop, WAV files, SNR | [`week1/`](week1/) | [`solutions/week1/`](solutions/week1/) |
+| 2 | Seeing and scoring noise: STFT, spectrograms, SI-SDR / PESQ / STOI | [`week2/`](week2/) | [`solutions/week2/`](solutions/week2/) |
+| 3 | Your first enhancement network: learning to guess the mask | [`week3/`](week3/) | |
 
 Do the weeks in order: Week 1 sets up the environment that Weeks 2 and 3 reuse, and each week builds
-on the one before. Each folder has its own `README.md` — start there.
+on the one before. Each folder has its own `README.md` — start there. Solutions for a week are added
+to [`solutions/`](solutions/) once that week is over.
 
 ## Getting the labs onto the lab server
 
