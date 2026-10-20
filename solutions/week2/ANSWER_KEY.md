@@ -87,8 +87,11 @@ individual glottal pulses as vertical striations), but the harmonics blur into b
 has 31 Hz bins — fine enough to resolve harmonics spaced by a typical F0 of 100–250 Hz — while staying
 shorter than most phonemes.
 
-**Q5 (phase).** 0: identical to the original. 1 (zero phase): buzzy and robotic — every frame becomes
-a pulse centred in the frame, repeating every hop (8 ms → a 125 Hz buzz). 2 (random phase): rough,
+**Q5 (phase).** 0: identical to the original. 1 (zero phase): buzzy and robotic, with a 125 Hz buzz.
+With zero phase every frame turns into the same kind of symmetric, click-like waveform, lined up the
+same way in every frame, so the output repeats once per hop (8 ms → 125 Hz; measured: the output's
+spectrum is about 18 dB stronger at multiples of 125 Hz than between them, the original speech
+shows no such pattern). 2 (random phase): rough,
 noisy, whispery and smeared, like heavy reverberation. 3 (noisy phase): close to clean but rough,
 with a noisy edge. Phase sets where each frequency component sits inside the frame; with the wrong
 phase the overlapping frames no longer add up coherently. File 3 is the best that any method which

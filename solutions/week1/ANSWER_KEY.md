@@ -28,11 +28,14 @@ just 880 Hz, and that broadband burst is what we hear as a click. A 10 ms ramp m
 which keeps the energy close to 880 Hz. *Link to next week:* this is exactly why the STFT multiplies
 every frame by a smooth window (Hann) before the FFT.
 
-**Q2 (what the filter learned).** It passes 500 Hz–4 kHz at about 0 dB and blocks everything below
-~200 Hz by 20–60 dB, i.e. it has become a high-pass filter. The rumble and the tones live in
-*different* frequency bands, so a filter that blocks one band and passes the other removes the noise
-without hurting the target. Good answers mention both halves: noise energy is low-frequency, and the
-tones sit above it.
+**Q2 (what the filter learned).** It passes the four tones (500 Hz–4 kHz, the red lines) at about
+0 dB and blocks everything below ~200 Hz by 20–60 dB, i.e. it has become a high-pass filter. The
+rumble and the tones live in *different* frequency bands, so a filter that blocks one band and passes
+the other removes the noise without hurting the target. Good answers mention both halves: noise
+energy is low-frequency, and the tones sit above it. Between the red lines the curve also dips
+(down to about −33 dB near 800 Hz): the rumble has a little energy there and no tone needs those
+frequencies, so turning them down only lowers the loss. A student who says "it keeps exactly the tone
+frequencies" has read the plot correctly too.
 
 **Q3 (forgetting `zero_grad`).** `loss.backward()` *adds* new gradients to whatever is stored in
 `.grad`. Without `zero_grad()`, the gradient used at step t is the sum of every gradient since step 0.
@@ -86,7 +89,8 @@ That is the motivation for STOI next week: SNR alone does not predict intelligib
 | 1.1 | `RuntimeError` / shape mismatch only when `fade=0` | `env[-0:]` is the whole array; needs `if F > 0` |
 | 1.3 | output shape `[4, 4, 16000]` | `amax(dim=-1)` without `keepdim=True` — broadcasting silently pairs every clip with every peak |
 | 1.3 | peaks 0.07 / 0.2 / … instead of 0.9 | used `x.abs().max()` over the whole batch |
-| 2 | loss never moves | `zero_grad()` placed between `backward()` and `step()`, or the forward pass is inside `torch.no_grad()` |
+| 2 | loss never moves | `zero_grad()` placed between `backward()` and `step()` (the gradients are erased before the step uses them) |
+| 2 | `RuntimeError: element 0 of tensors does not require grad and does not have a grad_fn` | the forward pass `model(noisy)` is inside `torch.no_grad()` |
 | 3.2 | first check fails, others pass | divided by 32767 (−32768 → −1.00003) |
 | 3.3 | length check fails | `up` and `down` swapped |
 | 3.4 | clipping check fails on some files | used `x.max()` instead of `np.abs(x).max()` — misses a loud negative peak |
