@@ -1,0 +1,7 @@
+LibriSpeech test-clean utterances mixed into noise_babble.flac (first 10 s of each)
+61-70970-0004	M
+121-123852-0000	F
+237-126133-0000	F
+260-123286-0019	M
+672-122797-0001	M
+1221-135766-0000	F

@@ -2,57 +2,45 @@
 
 Name:
 
-Answer in your own words; two or three sentences each. Quote the numbers your labs printed where a
+Answer in your own words; two or three sentences each. Quote the numbers your tools printed where a
 question asks about them.
 
-## Lab 1
-
-**Q1.** Listen to a few files in `out/lab1_examples/`. Instead of saving a fixed set of noisy files
-like in Week 1, the Dataset mixes a new example every time. What would go wrong if we trained on just
-117 fixed noisy files, one per clean clip?
+**Q1 (the dataset).** Which test set did your group choose, and why? What can its metrics tell you that the
+other test set's cannot — and the other way round?
 
 >
 
-**Q2.** Lab 1 checks that a 10× louder input gives the same features. Why do we want that? What would
-the network have to learn if the features changed with the volume?
+**Q2 (one 16 kHz version).** The course does not let anyone resample the data by hand: one script makes the
+16 kHz files and prints fingerprints. Two 16 kHz versions made with different resamplers differ by 0.03–0.05
+PESQ. Why does that matter for comparing two groups, and for comparing with a paper?
 
 >
 
-## Lab 2
-
-**Q3.** In `out/lab2_mlp.png`, compare the MLP's predicted mask with the ideal ratio mask. Where does
-it go wrong? Why is that hard for a network that sees only one 32 ms frame at a time?
-
->
-
-## Lab 3
-
-**Q4.** The MLP and the GRU have the same number of weights and were trained on the same data, with
-the same loss, for the same number of steps. Which one did better — in training loss and in the test
-scores? What information can the GRU use that the MLP cannot, and why does it help against the
-noise we trained on?
+**Q3 (calibration).** Copy your calibration table (`results/calibration.md`). Why do we score the noisy
+files — which involve no model at all — before scoring GTCRN? What would you conclude if the noisy row did
+not match the paper?
 
 >
 
-**Q5.** The GRU only looks backward in time. Why would a hearing aid or a phone call need that? What
-could a model gain by also looking ahead, and what would it cost?
+**Q4 (reading the official code).** In `infer.py`, which STFT settings and which window does GTCRN use?
+What would happen to the scores if your `enhance()` used a different window or hop than the one the
+checkpoint was trained with? (You may try it - write down what you tried.)
 
 >
 
-## Lab 4
-
-**Q6.** On pink noise, both networks reach a large fraction of the SI-SDR ceiling but a much smaller
-fraction of the PESQ ceiling (see the table in Lab 4). Listen to `out/exam/pink_0dB_GRU.wav` and
-`out/exam/pink_0dB_oracle.wav`. What is still wrong with the network's output that PESQ notices?
+**Q5 (your numbers vs the paper's).** Copy the table from `results/week3_table.md`. How large is the gap
+for each metric? Name two things that could make a correctly run official checkpoint score differently
+from the paper.
 
 >
 
-**Q7.** On babble, both networks do almost nothing — look at the GRU mask in `out/week3_masks.png`.
-Why? What did the networks actually learn about "what noise is" from the training data?
+**Q6 (listening).** Listen to all 10 samples. What is left of the noise at 2.5 dB and at 12.5 dB? Is the
+speech changed? Do the per-file numbers that se_eval printed agree with what you hear — find one case where
+they do not.
 
 >
 
-**Q8.** If you could change ONE thing to make the GRU handle babble, what would you change? Why do you
-expect it to help, and how would you test that it was this change - and nothing else - that helped?
+**Q7 (speed).** `infer_dir.py` printed a real-time factor. What does RTF 0.01 mean? Why is "whole file
+at once, on a GPU" not the RTF that matters for a hearing aid or a phone call? (Week 8 measures it properly.)
 
 >

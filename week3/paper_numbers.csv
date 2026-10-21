@@ -1,0 +1,5 @@
+name,dataset,PESQ,STOI,ESTOI,SI-SDR,DNSMOS_OVRL,DNSMOS_SIG,DNSMOS_BAK,DNSMOS_P808,source
+noisy,vctk-demand-test,,,,,,,,,
+gtcrn,vctk-demand-test,,,,,,,,,
+noisy,dns3-blind-track1,,,,,,,,,
+gtcrn,dns3-blind-track1,,,,,,,,,

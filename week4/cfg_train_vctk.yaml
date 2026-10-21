@@ -1,0 +1,70 @@
+# SEtrain configuration for GTCRN on the course's VCTK-DEMAND - Week 4 short run (3 epochs).
+# Copy it to ~/baselines/SEtrain/configs/ and run:   python train.py -C configs/cfg_train_vctk.yaml -D 0
+# Everything not marked "Week 4" is SEtrain's own configs/cfg_train.yaml, unchanged.
+# ${oc.env:HOME} is your home folder (OmegaConf does not understand "~").
+
+network_config:
+  n_fft: 512
+  hop_len: 256
+  win_len: 512
+
+DDP:
+  world_size: 1                       # Week 4: one GPU
+
+optimizer:
+  lr: 0.001
+
+scheduler:
+  kwargs:
+    warmup_steps: 25000
+    decay_until_step: 250000
+    max_lr: 1e-3
+    min_lr: 1e-6
+  update_interval: step               # [step, epoch]
+
+FFT:
+  n_fft: 512
+  hop_length: 256
+  win_length: 512
+
+loss:
+  n_fft: ${FFT.n_fft}
+  hop_len: ${FFT.hop_length}
+  win_len: ${FFT.win_length}
+  compress_factor: 0.3
+  eps: 1e-12
+  lamda_ri: 30
+  lamda_mag: 70
+
+train_dataset:                        # Week 4: VCTKDataset (dataloader_vctk.py) instead of DNS3Dataset
+  clean_dir: ${oc.env:HOME}/data/VCTK-DEMAND/train/clean
+  noisy_dir: ${oc.env:HOME}/data/VCTK-DEMAND/train/noisy
+  train: True
+  limit: 0                            # 0 = all 10,000 pairs
+
+train_dataloader:
+  batch_size: 8
+  num_workers: 4
+  drop_last: True
+  pin_memory: True
+
+validation_dataset:
+  clean_dir: ${oc.env:HOME}/data/VCTK-DEMAND/val/clean
+  noisy_dir: ${oc.env:HOME}/data/VCTK-DEMAND/val/noisy
+  train: False
+  limit: 0                            # 0 = all 1,572 pairs
+
+validation_dataloader:
+  batch_size: 4
+  num_workers: 4
+  pin_memory: True
+
+samplerate: 16000
+
+trainer:
+  epochs: 3                           # Week 4: a short run to see the whole loop work; Week 5 decides the real number
+  save_checkpoint_interval: 1
+  clip_grad_norm_value: 3.0
+  exp_path: ${oc.env:HOME}/exp/gtcrn_vctk_week4     # Week 4: the run's folder (the date and time are added)
+  resume: False
+  resume_datetime: 2024-12-31-14h28m

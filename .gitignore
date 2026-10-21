@@ -6,3 +6,4 @@ __pycache__/
 # your own recordings for Week 1
 week1/data/clean_speech.wav
 week1/data/noise.wav
+.venv/

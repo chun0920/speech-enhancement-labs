@@ -1,0 +1,6 @@
+# made by the labs or by uv - never committed
+out/
+.venv/
+__pycache__/
+*.pt
+results/_check.csv

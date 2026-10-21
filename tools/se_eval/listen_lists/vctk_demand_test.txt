@@ -1,0 +1,15 @@
+# VCTK-DEMAND test set: the 10 utterances every group saves as listening samples (Week 3, Week 9 demo page).
+# Rule (so it is not hand-picked): for each of the 5 test noises, the first utterance (by id) of speaker
+# p232 at 2.5 dB SNR and the first of speaker p257 at 12.5 dB that is at least 3 s long
+# (noise and SNR from logfiles/log_testset.txt).
+# id        noise    SNR(dB)  length(s)
+p232_005    bus      2.5      6.25
+p257_024    bus      12.5     4.69
+p232_032    cafe     2.5      3.49
+p257_007    cafe     12.5     3.40
+p232_014    living   2.5      4.62
+p257_011    living   12.5     5.11
+p232_019    office   2.5      6.74
+p257_015    office   12.5     4.69
+p232_023    psquare  2.5      9.77
+p257_019    psquare  12.5     5.52

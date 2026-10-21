@@ -1,0 +1,21 @@
+# The environment of the shared evaluation script. uv.lock pins every package, so both groups score
+# with exactly the same PESQ / STOI / DNSMOS code:  uv sync   (no PyTorch needed - it only reads WAV files)
+[project]
+name = "se-eval"
+version = "1.0.0"
+description = "Shared speech-enhancement evaluation for both groups"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "numpy",
+    "scipy",
+    "soundfile",
+    "pesq",
+    "pystoi",
+    "onnxruntime",
+    "librosa",
+]
+
+[tool.uv]
+package = false
+python-preference = "only-managed"     # uv's own Python, with the headers pesq needs to compile
+environments = ["sys_platform == 'linux' and platform_machine == 'x86_64'"]

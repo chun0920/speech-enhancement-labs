@@ -1,0 +1,11 @@
+sig_bak_ovr.onnx and model_v8.onnx are the DNSMOS models of the Microsoft DNS Challenge,
+https://github.com/microsoft/DNS-Challenge/tree/master/DNSMOS/DNSMOS (downloaded 2026-10-21),
+licensed under Creative Commons Attribution 4.0 International (CC BY 4.0). They are unchanged.
+
+SHA256
+269fbebdb513aa23cddfbb593542ecc540284a91849ac50516870e1ac78f6edd  sig_bak_ovr.onnx
+9246480c58567bc6affd4200938e77eef49468c8bc7ed3776d109c07456f6e91  model_v8.onnx
+
+Paper: C. K. A. Reddy, V. Gopal, R. Cutler, "DNSMOS P.835: A non-intrusive perceptual objective speech
+quality metric to evaluate noise suppressors," ICASSP 2022.
+The scoring in se_eval.py follows DNSMOS/dnsmos_local.py of the same repository (non-personalized model).

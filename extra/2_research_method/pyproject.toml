@@ -1,0 +1,31 @@
+# The environment of this week, for uv. Together with uv.lock (the exact version of every package)
+# and .python-version, it rebuilds the same environment on any Linux computer:  uv sync
+[project]
+name = "week4"
+version = "1.0.0"
+description = "Week 4 speech enhancement labs"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "torch>=2.9",
+    "numpy",
+    "scipy",
+    "matplotlib",
+    "soundfile",
+    "pesq",
+    "pystoi",
+]
+
+[tool.uv]
+package = false                        # a folder of scripts, not a package to install
+python-preference = "only-managed"     # uv's own Python: the same 3.12 everywhere, with the headers pesq needs
+environments = ["sys_platform == 'linux' and platform_machine == 'x86_64'"]   # the lab server
+
+# PyTorch for CUDA 13.0: the lab server's RTX 50-series GPU needs it (the default PyPI build
+# fails there with "no kernel image is available").
+[tool.uv.sources]
+torch = [{ index = "pytorch-cu130" }]
+
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true

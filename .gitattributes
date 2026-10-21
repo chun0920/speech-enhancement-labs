@@ -1,2 +1,3 @@
 *.wav binary
 *.flac binary
+*.onnx binary

@@ -1,14 +1,19 @@
-"""Week 3 environment check.   Run:  python check_env.py
+"""Week 3 environment check.   Run (in the `se` conda environment):  python check_env.py
 
-You want every line to start with [ OK ]. If one says [FAIL], see README.md > Troubleshooting,
-or send a screenshot of this output to your mentor.
+You want every line to start with [ OK ]. Run it again after each setup step in README.md.
+If one says [FAIL], see README.md > Troubleshooting, or send a screenshot to your mentor.
 """
 import importlib
+import shutil
+import subprocess
 import sys
-import tempfile
 from pathlib import Path
 
-PACKAGES = ["numpy", "scipy", "matplotlib", "soundfile", "torch", "pesq", "pystoi"]
+HOME = Path.home()
+GTCRN = HOME / "baselines" / "gtcrn"
+SE = HOME / "speech-enhancement-labs" / "tools" / "se_eval"
+DATA = {"VCTK-DEMAND test": (HOME / "data" / "VCTK-DEMAND" / "test", ["clean", "noisy"], 824),
+        "DNS3 blind test": (HOME / "data" / "DNS3-blind", ["noisy"], 700)}
 problems = []
 
 
@@ -18,65 +23,65 @@ def line(ok, text):
         problems.append(text)
 
 
-line(sys.version_info >= (3, 9), f"Python {sys.version.split()[0]}  (3.9 or newer)")
+def info(text):
+    print("[INFO] " + text)
 
-for name in PACKAGES:
+
+line(sys.version_info >= (3, 9), f"Python {sys.version.split()[0]} ({sys.prefix})")
+for name in ("numpy", "soundfile", "torch", "einops"):
     try:
-        version = getattr(importlib.import_module(name), "__version__", "")
-        line(True, f"import {name:<11}{version}")
+        line(True, f"import {name:<10}{getattr(importlib.import_module(name), '__version__', '')}")
     except Exception as e:
-        line(False, f"import {name:<11}-> {e}")
+        line(False, f"import {name:<10}-> {e}")
 
 try:
     import torch
-
-    batch = torch.zeros(2, 1, 16000)
-    line(batch.shape == (2, 1, 16000), "torch works on the CPU")
     if torch.cuda.is_available():
-        on_gpu = (batch + 1).cuda()
-        line(on_gpu.is_cuda and on_gpu.sum().item() == 32000, f"torch works on the GPU ({torch.cuda.get_device_name(0)})")
+        x = torch.ones(1000, device="cuda")
+        line(float((x * 2).sum()) == 2000, f"torch works on the GPU: {torch.cuda.get_device_name(0)} (CUDA build {torch.version.cuda})")
     else:
-        print("[INFO] no CUDA GPU visible - fine for this week, everything runs on the CPU")
+        line(False, "no CUDA GPU visible to torch (nvidia-smi works? the right PyTorch build? README Step 0)")
 except Exception as e:
-    first = str(e).strip().splitlines()[0] if str(e).strip() else type(e).__name__
-    fix = "  -> PyTorch is too old for this GPU: see README > Troubleshooting (cu130)" if "no kernel image" in str(e) else ""
-    line(False, f"torch test -> {first}{fix}")
+    msg = str(e).strip().splitlines()[0] if str(e).strip() else type(e).__name__
+    line(False, f"torch on the GPU -> {msg}" + ("  (PyTorch too old for this GPU: README Step 0)" if "kernel image" in str(e) else ""))
+
+line(shutil.which("git") is not None, "git is installed" + ("" if shutil.which("git") else "  -> ask your mentor"))
+uv = shutil.which("uv") or (str(HOME / ".local" / "bin" / "uv") if (HOME / ".local" / "bin" / "uv").exists() else None)
+line(uv is not None, f"uv is installed ({uv})" if uv else "uv is installed  -> README Step 0, then open a new terminal")
+line((SE / "se_eval.py").exists(), f"the shared evaluation tool: {SE}")
+line((SE / ".venv").exists(), "its environment is built (cd $SE && uv sync)")
+
+line((GTCRN / "gtcrn.py").exists(), f"GTCRN code: {GTCRN}  (README Step 2)")
+for ck in ("model_trained_on_vctk.tar", "model_trained_on_dns3.tar"):
+    line((GTCRN / "checkpoints" / ck).exists(), f"checkpoint {ck}")
+if (GTCRN / ".git").exists() and shutil.which("git"):
+    head = subprocess.run(["git", "-C", str(GTCRN), "rev-parse", "--short", "HEAD"], capture_output=True, text=True).stdout.strip()
+    line(head.startswith("502ebfa"), f"GTCRN version {head} (the course was tested with 502ebfa)")
+
+found = 0
+for name, (root, kinds, n) in DATA.items():
+    if root.exists():
+        found += 1
+        for k in kinds:
+            have = len(list((root / k).glob("*.wav")))
+            line(have == n, f"{name}: {root / k} has {have} files (expected {n})")
+        src = root.parent / "SOURCE.txt" if name.startswith("VCTK") else root / "SOURCE.txt"
+        if src.exists():
+            info(f"fingerprints in {src}: compare them with README Step 3")
+line(found > 0, "test data found  (README Step 3)" if found else "no test data yet  -> README Step 3")
 
 try:
-    import numpy as np
-    import soundfile as sf
-
-    beep = 0.3 * np.sin(2 * np.pi * 1000 * np.arange(8000) / 16000)
-    tmp = Path(tempfile.gettempdir()) / "check_env_beep.wav"
-    sf.write(tmp, beep, 16000, subtype="PCM_16")
-    back, sr = sf.read(tmp, dtype="float32")
-    tmp.unlink()
-    line(sr == 16000 and np.abs(back - beep).max() < 1e-3, "write + read a WAV file with soundfile")
+    import my_model
+    unset = [n for n in ("REPO", "CHECKPOINT", "MODEL_NAME") if getattr(my_model, n, None) is None]
+    if unset:
+        info(f"my_model.py: {', '.join(unset)} not set yet (Exercise 1 - fine before Step 5)")
+    else:
+        line(Path(my_model.CHECKPOINT).exists(), f"my_model.py: CHECKPOINT {my_model.CHECKPOINT}")
 except Exception as e:
-    line(False, f"WAV write/read -> {e}")
-
-try:
-    clips = sorted((Path("data") / "train").glob("*.flac"))
-    minutes = sum(sf.info(f).duration for f in clips) / 60
-    line(len(clips) == 117, f"data/train: {len(clips)} training clips, {minutes:.1f} minutes (FLAC files open)")
-    babble = sf.info(Path("data") / "noise_babble.flac")
-    line(babble.samplerate == 16000 and babble.duration >= 10, f"data/noise_babble.flac found ({babble.duration:.1f} s)")
-except Exception as e:
-    line(False, f"training data -> {e}  (unzip the whole week3 folder, including data/)")
-
-try:
-    from pesq import pesq
-    from pystoi import stoi
-
-    speech, sr = sf.read(Path("data") / "speech_sample.wav", dtype="float32")
-    line(sr == 16000 and len(speech) > 16000, f"data/speech_sample.wav found ({len(speech) / sr:.2f} s)")
-    p, s = pesq(16000, speech, speech, "wb"), stoi(speech, speech, 16000)
-    line(p > 4.5 and s > 0.99, f"PESQ and STOI run (clean vs itself: PESQ {p:.2f}, STOI {s:.2f})")
-except Exception as e:
-    line(False, f"PESQ / STOI test -> {e}")
+    info(f"my_model.py does not import yet ({type(e).__name__}) - fine before Step 5")
 
 print()
 if problems:
     print(f"{len(problems)} problem(s). See README.md > Troubleshooting.")
     sys.exit(1)
-print("Ready. Start with:  python lab1_data.py")
+print("Ready.")
