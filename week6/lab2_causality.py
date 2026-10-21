@@ -9,10 +9,14 @@ In this lab, you:
   1. Inspect convolution padding rules to differentiate causal vs non-causal filters
   2. Implement an empirical perturbation test to verify that future changes never leak into the past
   3. Calculate the algorithmic latency of the causal STFT/iSTFT pipeline
-  4. Test GTCRN against a deliberately non-causal toy layer to prove the test catches violations
+  4. Test GTCRN directly on real audio tensors to prove it satisfies strict temporal causality
+  5. Test against a deliberately non-causal symmetric layer to prove the test catches violations
 """
 import torch
 import torch.nn as nn
+from pathlib import Path
+
+import my_model
 
 _passed = []
 
@@ -69,17 +73,16 @@ def calculate_algorithmic_latency(hop_len=256, sample_rate=16000):
 
 
 # ---------------------------------------------------------------- Exercise 2.3
-def verify_temporal_causality(model_fn, x, cutoff_sample, tol=1e-5):
+def verify_temporal_causality(model_fn, x, cutoff_step, time_dim=None, tol=1e-5):
     """Verify temporal causality via future-perturbation testing.
 
     Protocol:
       1. Run model_fn on original input: y1 = model_fn(x)
       2. Construct perturbed input x_pert:
-           x_pert equals x for all samples < cutoff_sample
-           x_pert has arbitrary random noise added for samples >= cutoff_sample
+           samples at t >= cutoff_step on time_dim receive arbitrary random perturbation
       3. Run model_fn on perturbed input: y2 = model_fn(x_pert)
-      4. Measure maximum absolute difference on past output:
-           past_diff = max(|y1[..., :cutoff_sample] - y2[..., :cutoff_sample]|)
+      4. Measure maximum absolute difference on past output (t < cutoff_step):
+           past_diff = max(|y1[t < cutoff_step] - y2[t < cutoff_step]|)
       5. If past_diff <= tol: model is causal (future change did not alter past output)
          If past_diff > tol: model is non-causal (future leaked into the past)
 
@@ -98,21 +101,7 @@ class NonCausalToyBlock(nn.Module):
         self.conv = nn.Conv1d(1, 1, kernel_size=5, padding=2, bias=False)  # symmetric padding
 
     def forward(self, x):
-        # x: (B, T)
         return self.conv(x.unsqueeze(1)).squeeze(1)
-
-
-class CausalToyBlock(nn.Module):
-    """Toy block with causal past-only padding (strictly causal)."""
-    def __init__(self):
-        super().__init__()
-        self.k = 5
-        self.conv = nn.Conv1d(1, 1, kernel_size=self.k, padding=0, bias=False)
-
-    def forward(self, x):
-        # x: (B, T)
-        padded = torch.nn.functional.pad(x.unsqueeze(1), (self.k - 1, 0))
-        return self.conv(padded).squeeze(1)
 
 
 if __name__ == "__main__":
@@ -149,25 +138,32 @@ if __name__ == "__main__":
 
     print("\n--- Testing Exercise 2.3: verify_temporal_causality ---")
     torch.manual_seed(42)
-    test_x = torch.randn(1, 16000)
-    cutoff = 8000
-
-    causal_toy = CausalToyBlock()
     non_causal_toy = NonCausalToyBlock()
-
+    toy_x = torch.randn(1, 16000)
     try:
-        causal_res, causal_diff = verify_temporal_causality(causal_toy, test_x, cutoff)
-        non_causal_res, non_causal_diff = verify_temporal_causality(non_causal_toy, test_x, cutoff)
+        non_causal_res, non_causal_diff = verify_temporal_causality(non_causal_toy, toy_x, cutoff_step=8000)
     except NotImplementedError:
-        causal_res, causal_diff = False, 999.0
         non_causal_res, non_causal_diff = True, 0.0
 
-    check("confirms causal layer produces 0 difference on past samples",
-          lambda: causal_res is True and causal_diff < 1e-6,
-          "causal block output must not change in past frames")
     check("detects future leakage in non-causal symmetric layer",
           lambda: non_causal_res is False and non_causal_diff > 1e-3,
           "symmetric convolution leaks future perturbation backward into past")
+
+    print(f"\n--- Testing Causality on real {getattr(my_model, 'MODEL_NAME', 'model')} ---")
+    try:
+        model = my_model.build_model("cpu")
+        inputs = my_model.example_input(2.0, "cpu")[0]  # (1, 257, 126, 2)
+        cutoff = inputs.shape[2] // 2
+        gtcrn_causal_res, gtcrn_diff = verify_temporal_causality(model, inputs, cutoff_step=cutoff)
+    except NotImplementedError:
+        gtcrn_causal_res, gtcrn_diff = False, 999.0
+    except Exception as e:
+        gtcrn_causal_res, gtcrn_diff = False, 999.0
+
+    print(f"  {getattr(my_model, 'MODEL_NAME', 'model')} past max diff: {gtcrn_diff}")
+    check(f"confirms real {getattr(my_model, 'MODEL_NAME', 'model')} produces 0 difference on past frames",
+          lambda: gtcrn_causal_res is True and gtcrn_diff < 1e-6,
+          f"{getattr(my_model, 'MODEL_NAME', 'model')} output must not change in past frames")
 
     n, p = len(_passed), sum(_passed)
     print(f"\n{p}/{n} checks passed. " + ("All done!" if p == n else "Fix the FAIL lines and run again."))

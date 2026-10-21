@@ -10,8 +10,8 @@ For interactive communication (Zoom, Teams, Discord):
 
 In this lab, you:
   1. Implement a precise benchmarking harness with CUDA synchronization and warmup iterations
-  2. Measure RTF on CPU (single-thread and multi-thread) and GPU
-  3. Measure chunk-by-chunk streaming latency (16 ms hop size)
+  2. Measure RTF on CPU on the real GTCRN model
+  3. Measure chunk-by-chunk streaming latency (16 ms hop size) on the real GTCRN model
   4. Generate results/efficiency_table.md for your group's final report
 """
 import time
@@ -91,7 +91,7 @@ def generate_efficiency_table(results_dict, out_path):
 if __name__ == "__main__":
     import tempfile
 
-    print("--- Testing Exercise 2.1: benchmark_execution_time ---")
+    print("--- Testing Exercise 2.1: benchmark_execution_time on dummy task ---")
     def sleep_work():
         time.sleep(0.005)
 
@@ -104,46 +104,73 @@ if __name__ == "__main__":
           lambda: 0.004 < t_sec < 0.010,
           "expected elapsed time close to 5 ms")
 
-    print("\n--- Testing Exercise 2.2: measure_rtf ---")
+    print("\n--- Testing on Real GTCRN Model ---")
     try:
-        rtf_dummy = measure_rtf(sleep_work, audio_duration_sec=1.0, is_cuda=False, warmup=1, trials=2)
-    except NotImplementedError:
-        rtf_dummy = 999.0
+        import my_model
+        gtcrn = my_model.build_model("cpu")
+        inp_1s = my_model.example_input(1.0, "cpu")[0]
+        inp_chunk = my_model.example_input(0.016, "cpu")[0]
+    except Exception as e:
+        gtcrn = None
+        inp_1s = None
+        inp_chunk = None
+        print(f"  Note: my_model not loaded directly: {e}")
 
-    check("computes RTF < 1.0 for 5 ms task on 1s audio",
-          lambda: 0.003 < rtf_dummy < 0.015,
-          "expected RTF ~0.005")
+    check("my_model.py available and GTCRN loads",
+          lambda: gtcrn is not None,
+          "copy my_model.py into this folder (README Step 0)")
 
-    print("\n--- Testing Exercise 2.3: measure_chunk_latency_ms ---")
-    try:
-        lat_ms = measure_chunk_latency_ms(sleep_work, is_cuda=False, warmup=1, trials=2)
-    except NotImplementedError:
-        lat_ms = 0.0
+    if gtcrn is not None:
+        def run_1s():
+            gtcrn(inp_1s)
 
-    check("returns latency in milliseconds (~5.0 ms)",
-          lambda: 4.0 < lat_ms < 10.0,
-          "expected latency in ms")
-
-    print("\n--- Testing Exercise 2.4: generate_efficiency_table ---")
-    with tempfile.TemporaryDirectory() as tmp:
-        out_f = Path(tmp) / "results" / "efficiency_table.md"
-        sample_dict = {
-            "hardware": "RTX 3060 / Intel i7",
-            "cpu_rtf": 0.035,
-            "gpu_rtf": 0.004,
-            "chunk_latency_ms": 1.25,
-            "params_k": 23.67,
-            "mmacs": 33.0,
-        }
+        print("\n--- Testing Exercise 2.2: measure_rtf on Real GTCRN ---")
         try:
-            tbl = generate_efficiency_table(sample_dict, out_f)
-            has_tbl = out_f.exists() and "0.035" in out_f.read_text(encoding="utf-8")
+            cpu_rtf = measure_rtf(run_1s, audio_duration_sec=1.0, is_cuda=False, warmup=2, trials=5)
         except NotImplementedError:
-            tbl, has_tbl = "", False
+            cpu_rtf = 999.0
 
-        check("writes efficiency table with RTF and MMACs",
-              lambda: has_tbl and "33.0 MMACs" in tbl,
-              "table must contain formatted RTF and MMACs")
+        check("real GTCRN CPU RTF < 1.0 (faster than real-time)",
+              lambda: 0.001 < cpu_rtf < 0.5,
+              f"expected RTF < 1.0, got {cpu_rtf:.4f}")
+
+        def run_chunk():
+            gtcrn(inp_chunk)
+
+        print("\n--- Testing Exercise 2.3: measure_chunk_latency_ms on Real GTCRN ---")
+        try:
+            chunk_lat = measure_chunk_latency_ms(run_chunk, is_cuda=False, warmup=5, trials=20)
+        except NotImplementedError:
+            chunk_lat = 999.0
+
+        check("real GTCRN chunk latency < 16.0 ms (streaming budget)",
+              lambda: 0.01 < chunk_lat < 16.0,
+              f"expected chunk latency < 16.0 ms, got {chunk_lat:.2f} ms")
+
+        print("\n--- Testing Exercise 2.4: generate_efficiency_table ---")
+        with tempfile.TemporaryDirectory() as tmp:
+            out_f = Path(tmp) / "results" / "efficiency_table.md"
+            sample_dict = {
+                "hardware": "Benchmark Machine (CPU)",
+                "cpu_rtf": cpu_rtf,
+                "gpu_rtf": None,
+                "chunk_latency_ms": chunk_lat,
+                "params_k": 23.67,
+                "mmacs": 33.0,
+            }
+            try:
+                tbl = generate_efficiency_table(sample_dict, out_f)
+                has_tbl = out_f.exists() and f"{cpu_rtf:.4f}" in out_f.read_text(encoding="utf-8")
+            except NotImplementedError:
+                tbl, has_tbl = "", False
+
+            check("writes efficiency table with actual measured RTF and latency",
+                  lambda: has_tbl and f"{chunk_lat:.2f} ms" in tbl,
+                  "table must contain actual measured values")
+    else:
+        check("real GTCRN CPU RTF < 1.0 (faster than real-time)", lambda: False, "GTCRN model not loaded")
+        check("real GTCRN chunk latency < 16.0 ms (streaming budget)", lambda: False, "GTCRN model not loaded")
+        check("writes efficiency table with actual measured RTF and latency", lambda: False, "GTCRN model not loaded")
 
     n, p = len(_passed), sum(_passed)
     print(f"\n{p}/{n} checks passed. " + ("All done!" if p == n else "Fix the FAIL lines and run again."))

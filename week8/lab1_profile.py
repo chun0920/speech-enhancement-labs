@@ -11,8 +11,8 @@ GTCRN was specifically designed for ultra-low complexity:
 
 In this lab, you:
   1. Profile trainable vs non-trainable parameter counts (48,245 total, 23,669 trainable)
-  2. Implement a layer-level computational complexity (MACs) profiler
-  3. Verify that 1 second of audio costs ~33.0 MMACs
+  2. Implement a computational complexity (MACs) profiler
+  3. Verify that 1 second of audio costs ~33.0 MMACs on the real GTCRN model
 """
 import torch
 import torch.nn as nn
@@ -51,7 +51,7 @@ def profile_macs(model, frames=61, freq_bins=257, device="cpu"):
     """Profile Multiply-Accumulate operations (MACs) for GTCRN on a spectrogram input.
 
     For 1 second of 16 kHz audio with hop=256, there are approximately 61–63 frames.
-    At 61 frames, GTCRN requires ~33.0 MMACs.
+    At 61 frames, GTCRN requires ~33.0 MMACs (via thop or layer-by-layer hook).
 
     Args:
       model: GTCRN module
@@ -90,48 +90,69 @@ if __name__ == "__main__":
     except NotImplementedError:
         tot, trn, fix = 0, 0, 0
 
-    check("total parameters counted correctly (320)",
+    check("total parameters counted correctly on toy (320)",
           lambda: tot == 320,
           "expected 220 + 100 = 320 total")
-    check("trainable parameters counted correctly (220)",
+    check("trainable parameters counted correctly on toy (220)",
           lambda: trn == 220,
           "expected 220 trainable")
-    check("fixed parameters counted correctly (100)",
+    check("fixed parameters counted correctly on toy (100)",
           lambda: fix == 100,
           "expected 100 fixed")
 
-    print("\n--- Testing Exercise 1.2: profile_macs on Toy Model ---")
-    class SimpleConvModel(nn.Module):
-        def __init__(self):
-            super().__init__()
-            self.conv = nn.Conv2d(2, 4, kernel_size=(3, 3), padding=0, bias=False)
-
-        def forward(self, x):
-            # x: (1, 257, 61, 2) -> permute to (1, 2, 61, 257)
-            x = x.permute(0, 3, 2, 1)
-            return self.conv(x)
-
-    toy = SimpleConvModel()
+    print("\n--- Testing with Real GTCRN Model ---")
     try:
-        t_macs, t_mmacs = profile_macs(toy, frames=61, freq_bins=257)
-    except NotImplementedError:
-        t_macs, t_mmacs = 0, 0.0
+        import my_model
+        gtcrn = my_model.build_model("cpu")
+    except Exception as e:
+        gtcrn = None
+        print(f"  Note: my_model not loaded directly: {e}")
 
-    # Output shape: H_out = 61 - 2 = 59, W_out = 257 - 2 = 255
-    # MACs = 1 * 59 * 255 * 4 * 2 * 3 * 3 = 15045 * 72 = 1,083,240
-    check("calculates Conv2d MACs accurately (> 1.0 MMAC)",
-          lambda: 1.0 < t_mmacs < 1.2,
-          "expected ~1.08 MMACs for toy convolution")
+    check("my_model.py available and GTCRN loads",
+          lambda: gtcrn is not None,
+          "copy my_model.py into this folder (README Step 0)")
 
-    print("\n--- Testing Exercise 1.3: format_efficiency_summary ---")
-    try:
-        summary_md = format_efficiency_summary(48245, 23669, 24576, 33.0)
-    except NotImplementedError:
-        summary_md = ""
+    if gtcrn is not None:
+        try:
+            g_tot, g_trn, g_fix = count_parameters(gtcrn)
+        except NotImplementedError:
+            g_tot, g_trn, g_fix = 0, 0, 0
 
-    check("formats markdown table with 33.0 MMACs and 23.67 K",
-          lambda: "33.0 MMACs" in summary_md and "23.67 K" in summary_md,
-          "table must display 33.0 MMACs and 23.67 K parameters")
+        check("real GTCRN total parameters counted correctly (48,245)",
+              lambda: g_tot == 48245,
+              f"expected 48245 total, got {g_tot}")
+        check("real GTCRN trainable parameters counted correctly (23,669)",
+              lambda: g_trn == 23669,
+              f"expected 23669 trainable, got {g_trn}")
+        check("real GTCRN fixed ERB parameters counted correctly (24,576)",
+              lambda: g_fix == 24576,
+              f"expected 24576 fixed ERB, got {g_fix}")
+
+        print("\n--- Testing Exercise 1.2: profile_macs on Real GTCRN ---")
+        try:
+            t_macs, t_mmacs = profile_macs(gtcrn, frames=61, freq_bins=257)
+        except NotImplementedError:
+            t_macs, t_mmacs = 0, 0.0
+
+        check("profiles real GTCRN MACs for 1s audio (~33.0 MMACs)",
+              lambda: 32.0 <= t_mmacs <= 34.5,
+              f"expected ~33.0 MMACs, got {t_mmacs:.2f} MMACs")
+
+        print("\n--- Testing Exercise 1.3: format_efficiency_summary ---")
+        try:
+            summary_md = format_efficiency_summary(g_tot, g_trn, g_fix, t_mmacs)
+        except NotImplementedError:
+            summary_md = ""
+
+        check("formats markdown table with measured GTCRN values",
+              lambda: f"{t_mmacs:.1f} MMACs" in summary_md and "23.67 K" in summary_md and "48.25 K" in summary_md,
+              "table must display measured 33.0 MMACs and parameter counts")
+    else:
+        check("real GTCRN total parameters counted correctly (48,245)", lambda: False, "GTCRN model not loaded")
+        check("real GTCRN trainable parameters counted correctly (23,669)", lambda: False, "GTCRN model not loaded")
+        check("real GTCRN fixed ERB parameters counted correctly (24,576)", lambda: False, "GTCRN model not loaded")
+        check("profiles real GTCRN MACs for 1s audio (~33.0 MMACs)", lambda: False, "GTCRN model not loaded")
+        check("formats markdown table with measured GTCRN values", lambda: False, "GTCRN model not loaded")
 
     n, p = len(_passed), sum(_passed)
     print(f"\n{p}/{n} checks passed. " + ("All done!" if p == n else "Fix the FAIL lines and run again."))
