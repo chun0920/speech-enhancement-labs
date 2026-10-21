@@ -7,12 +7,12 @@ meeting strict compute and memory budgets.
 GTCRN was specifically designed for ultra-low complexity:
   - Paper reported: 23.7 K trainable parameters, 39.6 MMACs / sec
   - Official repo update: 48.2 K total parameters (including 24.6 K fixed ERB weights),
-    and 33.0 MMACs / sec (replacing low-frequency linear-to-ERB matrix multiplication with concatenation)
+    and 33.0 MMACs / sec for 61 unpadded frames; 34.08 MMACs for 63 frames (my_model.example_input(1.0))
 
 In this lab, you:
   1. Profile trainable vs non-trainable parameter counts (48,245 total, 23,669 trainable)
-  2. Implement a computational complexity (MACs) profiler
-  3. Verify that 1 second of audio costs ~33.0 MMACs on the real GTCRN model
+  2. Implement computational complexity (MACs) profiling using thop
+  3. Verify that 1 second of audio (63 frames) costs ~34.08 MMACs on the real GTCRN model
 """
 import torch
 import torch.nn as nn
@@ -47,16 +47,18 @@ def count_parameters(model):
 
 
 # ---------------------------------------------------------------- Exercise 1.2
-def profile_macs(model, frames=61, freq_bins=257, device="cpu"):
-    """Profile Multiply-Accumulate operations (MACs) for GTCRN on a spectrogram input.
+def profile_macs(model, input_tensor=None, device="cpu"):
+    """Profile Multiply-Accumulate operations (MACs) for GTCRN on a spectrogram input using thop.
 
-    For 1 second of 16 kHz audio with hop=256, there are approximately 61–63 frames.
-    At 61 frames, GTCRN requires ~33.0 MMACs (via thop or layer-by-layer hook).
+    For 1 second of 16 kHz audio with hop=256, my_model.example_input(1.0) produces
+    an STFT tensor of shape (1, 257, 63, 2).
+    At 63 frames, GTCRN requires ~34.08 MMACs (measured with thop).
+    (Note: 61 frames without STFT center-padding corresponds to 33.0 MMACs).
 
     Args:
-      model: GTCRN module
-      frames: number of STFT time frames (default 61)
-      freq_bins: number of frequency bins (default 257)
+      model: PyTorch module
+      input_tensor: optional input tensor; if None, creates (1, 257, 63, 2)
+      device: device to run profiling on ("cpu")
 
     Returns:
       (total_macs: int, mmacs: float)
@@ -104,15 +106,17 @@ if __name__ == "__main__":
     try:
         import my_model
         gtcrn = my_model.build_model("cpu")
+        inp_1s = my_model.example_input(1.0, "cpu")[0]
     except Exception as e:
         gtcrn = None
+        inp_1s = None
         print(f"  Note: my_model not loaded directly: {e}")
 
     check("my_model.py available and GTCRN loads",
           lambda: gtcrn is not None,
           "copy my_model.py into this folder (README Step 0)")
 
-    if gtcrn is not None:
+    if gtcrn is not None and inp_1s is not None:
         try:
             g_tot, g_trn, g_fix = count_parameters(gtcrn)
         except NotImplementedError:
@@ -128,30 +132,36 @@ if __name__ == "__main__":
               lambda: g_fix == 24576,
               f"expected 24576 fixed ERB, got {g_fix}")
 
-        print("\n--- Testing Exercise 1.2: profile_macs on Real GTCRN ---")
+        print("\n--- Testing Exercise 1.2: profile_macs on Real GTCRN (63 frames) ---")
         try:
-            t_macs, t_mmacs = profile_macs(gtcrn, frames=61, freq_bins=257)
+            t_macs, t_mmacs = profile_macs(gtcrn, input_tensor=inp_1s)
         except NotImplementedError:
             t_macs, t_mmacs = 0, 0.0
+        except Exception as e:
+            t_macs, t_mmacs = 0, 0.0
+            print(f"  Note: profile_macs raised {type(e).__name__}: {e}")
 
-        check("profiles real GTCRN MACs for 1s audio (~33.0 MMACs)",
-              lambda: 32.0 <= t_mmacs <= 34.5,
-              f"expected ~33.0 MMACs, got {t_mmacs:.2f} MMACs")
+        check("profiles real GTCRN MACs on example_input(1.0) (~34.08 MMACs via thop)",
+              lambda: 33.5 <= t_mmacs <= 34.5,
+              f"expected ~34.08 MMACs, got {t_mmacs:.2f} MMACs (ensure thop is installed: pip install thop==0.1.1.post2209072238)")
 
         print("\n--- Testing Exercise 1.3: format_efficiency_summary ---")
         try:
             summary_md = format_efficiency_summary(g_tot, g_trn, g_fix, t_mmacs)
         except NotImplementedError:
             summary_md = ""
+        except Exception as e:
+            summary_md = ""
+            print(f"  Note: format_efficiency_summary raised {type(e).__name__}: {e}")
 
         check("formats markdown table with measured GTCRN values",
-              lambda: f"{t_mmacs:.1f} MMACs" in summary_md and "23.67 K" in summary_md and "48.25 K" in summary_md,
-              "table must display measured 33.0 MMACs and parameter counts")
+              lambda: f"{t_mmacs:.2f} MMACs" in summary_md and "23.67 K" in summary_md and "48.25 K" in summary_md,
+              "table must display measured MMACs and parameter counts")
     else:
         check("real GTCRN total parameters counted correctly (48,245)", lambda: False, "GTCRN model not loaded")
         check("real GTCRN trainable parameters counted correctly (23,669)", lambda: False, "GTCRN model not loaded")
         check("real GTCRN fixed ERB parameters counted correctly (24,576)", lambda: False, "GTCRN model not loaded")
-        check("profiles real GTCRN MACs for 1s audio (~33.0 MMACs)", lambda: False, "GTCRN model not loaded")
+        check("profiles real GTCRN MACs on example_input(1.0) (~34.08 MMACs via thop)", lambda: False, "GTCRN model not loaded")
         check("formats markdown table with measured GTCRN values", lambda: False, "GTCRN model not loaded")
 
     n, p = len(_passed), sum(_passed)

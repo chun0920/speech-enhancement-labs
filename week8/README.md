@@ -7,7 +7,7 @@ and run faster than real time.**
 
 In this week, you profile the model's computational footprint on identical hardware:
 1. **Parameter count**: Trainable weights (23.7 K) vs unlearnable ERB weights (24.6 K), total 48.2 K
-2. **Computational complexity**: Multiply-Accumulate operations per second (33.0 MMACs / sec)
+2. **Computational complexity**: Multiply-Accumulate operations per second (34.08 MMACs / sec for 1.0s audio / 63 frames via thop; 33.0 MMACs / sec for 61 unpadded frames)
 3. **Real-Time Factor (RTF)** on CPU and GPU ($\text{RTF} = \text{Processing Time} / \text{Audio Duration}$)
 4. **Per-chunk latency**: Execution time for a 16 ms streaming hop ($256 / 16000\text{ s}$)
 
@@ -33,6 +33,7 @@ Prerequisites: `my_model.py` and `infer_dir.py` from earlier weeks.
 cp -r ~/speech-enhancement-labs/week8 ~/week8_<yourname> && cd ~/week8_<yourname>
 cp ~/week7_<yourname>/my_model.py ~/week7_<yourname>/infer_dir.py .
 conda activate se
+pip install thop==0.1.1.post2209072238
 python check_env.py
 ```
 
@@ -46,10 +47,10 @@ python lab1_profile.py
 
 Complete the exercises:
 1. `count_parameters()`: Separates trainable from fixed weights.
-2. `profile_macs()`: Calculates layer-by-layer MACs for 1 second of audio (61 frames).
+2. `profile_macs()`: Calculates model MACs on `example_input(1.0)` (63 frames, ~34.08 MMACs via thop).
 3. `format_efficiency_summary()`: Generates the efficiency table.
 
-All 5 checks must pass with **All done!**.
+All checks must pass with **All done!**.
 
 ---
 
@@ -60,24 +61,16 @@ python lab2_rtf.py
 ```
 
 Complete the exercises:
-1. `benchmark_execution_time()`: Precise timing harness with warmup and CUDA synchronization.
-2. `measure_rtf()`: Real-Time Factor calculation for full utterance inference.
-3. `measure_chunk_latency_ms()`: Millisecond latency per 16 ms hop.
+1. `benchmark_execution_time()`: Harness with warmup iterations and CUDA synchronization.
+2. `measure_rtf()`: Computes RTF for full utterance inference on CPU (must be < 1.0).
+3. `measure_chunk_latency_ms()`: Measures 16 ms chunk streaming latency (must be < 16.0 ms).
 4. `generate_efficiency_table()`: Exports `results/efficiency_table.md`.
 
-All 4 checks must pass with **All done!**.
+All checks must pass with **All done!**.
 
 ---
 
-## Step 3 — Questions (`ANSWERS.md`)
+## Step 3 — Answer the Conceptual Questions
 
-Answer questions Q1–Q7 in `ANSWERS.md`.
-
----
-
-## Hand-in
-
-Your folder `week8_<yourname>/` containing:
-- Both lab scripts completed (`lab1_profile.py` 5/5, `lab2_rtf.py` 4/4)
-- `results/efficiency_table.md` containing your machine's benchmark
-- `ANSWERS.md` filled in
+Answer questions Q1–Q7 in `ANSWERS.md` and review with your mentor.
+ Master's students: incorporate `results/efficiency_table.md` into your final report.
