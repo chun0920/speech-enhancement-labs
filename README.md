@@ -13,9 +13,9 @@ The labs run in a terminal on the lab's Linux computers; full training (Weeks 5�
 | 5 | Full training on lab112; dissect HybridLoss; monitor loss curves | [`week5/`](week5/) | |
 | 6 | Checkpoints scored on the validation set; temporal causality verification | [`week6/`](week6/) | |
 | 7 ◆ | Final evaluation against Table 1; replication verification (<= 5% error margin) | [`week7/`](week7/) | |
-| 8 | Parameters, MACs (33 MMACs), real-time factor (RTF) & 16 ms streaming latency | [`week8/`](week8/) | |
-| 9 | Mismatched SNR stress testing; interactive HTML5 demo showcase | [`week9/`](week9/) | |
-| 10 ◆ | Repository hygiene audit, 15-minute presentation deck, master acceptance | [`week10/`](week10/) | |
+| 8 | Parameters, MACs, real-time factor and time per frame, measured on GTCRN | [`week8/`](week8/) | |
+| 9 | GTCRN at SNRs it was not trained on; the comparison table of both groups; a demo page | [`week9/`](week9/) | |
+| 10 ◆ | Report and presentation; a clean repository; final acceptance | [`week10/`](week10/) | |
 
 ◆ acceptance weeks, checked by Prof. Hung. Do the weeks in order: each folder has its own `README.md` —
 start there. Solutions for a week are added to [`solutions/`](solutions/) once that week is over.
