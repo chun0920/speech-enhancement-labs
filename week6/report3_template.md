@@ -22,8 +22,8 @@ $$\text{Total Latency} = \text{Algorithmic Latency} + \text{Processing Time (RTF
 
 | Component | Definition | GTCRN Value / Bound | Practical Constraint |
 |---|---|---|---|
-| Algorithmic Latency | Minimum buffering required before a frame can be processed | | Dependent on STFT hop size (256 samples = 16 ms) |
-| Processing Latency | Time taken by CPU/GPU to compute forward pass for one frame | | Must satisfy $\text{RTF} < 1.0$ (typically $< 3\text{ ms}$) |
+| Algorithmic Latency | Minimum buffering required before a frame can be processed | | One STFT window (512 samples); the hop (16 ms) is the per-frame compute deadline |
+| Processing Latency | Time taken by CPU/GPU to compute forward pass for one frame | | Must finish within one hop (16 ms); measured in Week 8 |
 | Frame Lookahead | Number of future frames needed by the network | 0 frames | 0 ms |
 
 ---

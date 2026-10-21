@@ -53,6 +53,6 @@ Run `lab2_rtf.py` with `torch.set_num_threads(1)` versus default multi-threading
 ---
 
 ### Q7. End-to-End Streaming Latency Breakdown
-List the four main latency components in an end-to-end real-time speech enhancement system from microphone capture to speaker playback, and note whether GTCRN's 16 ms algorithmic latency dominates or shares this budget.
+List the four main latency components in an end-to-end real-time speech enhancement system from microphone capture to speaker playback, and work out GTCRN's algorithmic latency (window 512, hop 256, 16 kHz) and how much of the budget it uses.
 
 > 

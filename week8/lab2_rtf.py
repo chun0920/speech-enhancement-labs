@@ -14,6 +14,8 @@ In this lab, you:
   3. Measure chunk-by-chunk streaming latency (16 ms hop size) on the real GTCRN model
   4. Generate results/efficiency_table.md for your group's final report
 """
+import copy
+import platform
 import time
 import torch
 import torch.nn as nn
@@ -88,6 +90,17 @@ def generate_efficiency_table(results_dict, out_path):
 
 
 # ================================================================ Test Suite
+def cpu_name():
+    """(Given) The CPU model name, for the table (Linux)."""
+    try:
+        for line in open("/proc/cpuinfo"):
+            if line.startswith("model name"):
+                return line.split(":", 1)[1].strip()
+    except OSError:
+        pass
+    return platform.processor() or "CPU"
+
+
 if __name__ == "__main__":
     import tempfile
 
@@ -122,7 +135,8 @@ if __name__ == "__main__":
 
     if gtcrn is not None:
         def run_1s():
-            gtcrn(inp_1s)
+            with torch.no_grad():                    # inference only: no autograd bookkeeping in the timing
+                gtcrn(inp_1s)
 
         print("\n--- Testing Exercise 2.2: measure_rtf on Real GTCRN ---")
         try:
@@ -135,7 +149,8 @@ if __name__ == "__main__":
               f"expected RTF < 1.0, got {cpu_rtf:.4f}")
 
         def run_chunk():
-            gtcrn(inp_chunk)
+            with torch.no_grad():
+                gtcrn(inp_chunk)
 
         print("\n--- Testing Exercise 2.3: measure_chunk_latency_ms on Real GTCRN ---")
         try:
@@ -148,25 +163,30 @@ if __name__ == "__main__":
               f"expected chunk latency < 16.0 ms, got {chunk_lat:.2f} ms")
 
         print("\n--- Testing Exercise 2.4: generate_efficiency_table ---")
-        with tempfile.TemporaryDirectory() as tmp:
-            out_f = Path(tmp) / "results" / "efficiency_table.md"
-            sample_dict = {
-                "hardware": "Benchmark Machine (CPU)",
-                "cpu_rtf": cpu_rtf,
-                "gpu_rtf": None,
-                "chunk_latency_ms": chunk_lat,
-                "params_k": 23.67,
-                "mmacs": 33.0,
-            }
-            try:
-                tbl = generate_efficiency_table(sample_dict, out_f)
-                has_tbl = out_f.exists() and f"{cpu_rtf:.4f}" in out_f.read_text(encoding="utf-8")
-            except NotImplementedError:
-                tbl, has_tbl = "", False
+        try:
+            import thop
+            macs_1s, _ = thop.profile(copy.deepcopy(gtcrn), inputs=(inp_1s,), verbose=False)
+        except ImportError:
+            macs_1s = float("nan")
+        out_f = Path("results") / "efficiency_table.md"
+        measured = {
+            "hardware": f"{cpu_name()}, {torch.get_num_threads()} threads",
+            "cpu_rtf": cpu_rtf,
+            "gpu_rtf": None,
+            "chunk_latency_ms": chunk_lat,
+            "params_k": sum(p.numel() for p in gtcrn.parameters() if p.requires_grad) / 1000,
+            "mmacs": macs_1s / 1e6,
+        }
+        try:
+            tbl = generate_efficiency_table(measured, out_f)
+            has_tbl = out_f.exists() and f"{cpu_rtf:.4f}" in out_f.read_text(encoding="utf-8")
+            print(f"  saved {out_f}")
+        except NotImplementedError:
+            tbl, has_tbl = "", False
 
-            check("writes efficiency table with actual measured RTF and latency",
-                  lambda: has_tbl and f"{chunk_lat:.2f} ms" in tbl,
-                  "table must contain actual measured values")
+        check("writes results/efficiency_table.md with the measured RTF and latency",
+              lambda: has_tbl and f"{chunk_lat:.2f} ms" in tbl,
+              "table must contain actual measured values")
     else:
         check("real GTCRN CPU RTF < 1.0 (faster than real-time)", lambda: False, "GTCRN model not loaded")
         check("real GTCRN chunk latency < 16.0 ms (streaming budget)", lambda: False, "GTCRN model not loaded")

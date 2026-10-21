@@ -57,13 +57,14 @@ def is_padding_causal(padding, kernel_size):
 
 
 # ---------------------------------------------------------------- Exercise 2.2
-def calculate_algorithmic_latency(hop_len=256, sample_rate=16000):
-    """Compute the algorithmic latency (in ms and samples) for frame-by-frame streaming.
+def calculate_algorithmic_latency(win_len=512, sample_rate=16000):
+    """Compute the algorithmic latency (in samples and ms) of causal frame-by-frame STFT processing.
 
-    In a causal overlap-add STFT framework with no future lookahead, the minimum algorithmic
-    buffering delay equals exactly one hop size:
-      latency_samples = hop_len
-      latency_ms = (hop_len / sample_rate) * 1000.0
+    A frame can be processed only after the last sample of its window has arrived. With overlap-add, the
+    oldest hop of that frame is final as soon as the frame is processed, so input-to-output delay is one window:
+      latency_samples = win_len
+      latency_ms = (win_len / sample_rate) * 1000.0
+    The hop (256 samples = 16 ms) is how often a new frame arrives: the time budget for processing one frame.
 
     Returns:
       (latency_samples: int, latency_ms: float)
@@ -125,16 +126,16 @@ if __name__ == "__main__":
 
     print("\n--- Testing Exercise 2.2: calculate_algorithmic_latency ---")
     try:
-        lat_samp, lat_ms = calculate_algorithmic_latency(hop_len=256, sample_rate=16000)
+        lat_samp, lat_ms = calculate_algorithmic_latency(win_len=512, sample_rate=16000)
     except NotImplementedError:
         lat_samp, lat_ms = 0, 0.0
 
-    check("latency is 256 samples",
-          lambda: lat_samp == 256,
-          "one hop is 256 samples")
-    check("latency is exactly 16.0 ms at 16 kHz",
-          lambda: abs(lat_ms - 16.0) < 1e-5,
-          "256 / 16000 * 1000 = 16.0 ms")
+    check("latency is 512 samples (one window, not one hop)",
+          lambda: lat_samp == 512,
+          "a frame waits until its whole window (512 samples) has arrived")
+    check("latency is exactly 32.0 ms at 16 kHz",
+          lambda: abs(lat_ms - 32.0) < 1e-5,
+          "512 / 16000 * 1000 = 32.0 ms")
 
     print("\n--- Testing Exercise 2.3: verify_temporal_causality ---")
     torch.manual_seed(42)

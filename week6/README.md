@@ -82,7 +82,7 @@ python lab2_causality.py
 
 Finish the three exercises:
 1. `is_padding_causal()`: Verifies whether convolution temporal padding is causal ($k_t - 1, 0$) vs symmetric.
-2. `calculate_algorithmic_latency()`: Computes hop buffering latency ($256 / 16000 \times 1000 = 16.0\text{ ms}$).
+2. `calculate_algorithmic_latency()`: Computes the algorithmic latency of causal STFT processing: one window, not one hop.
 3. `verify_temporal_causality()`: Injects random perturbations into future audio samples ($t \ge T_0$) and proves that past enhanced audio ($t < T_0$) is unaffected.
 
 Run until all 7 checks show `[PASS]` and you see **All done!**.
