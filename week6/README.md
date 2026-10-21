@@ -62,7 +62,7 @@ Finish the four exercises:
 Run until all 9 checks show `[PASS]` and you see **All done!**.
 
 ### Running validation evaluation on your server checkpoints:
-Once your training on lab112 has produced checkpoints (e.g. `model_050.tar`, `model_100.tar`, `best_model_*.tar`):
+Once your training on lab112 has produced checkpoints (e.g. `model_050.tar`, `model_100.tar`; never `best_model_*.tar`, see Week 5):
 ```bash
 RUN=$(ls -d ~/exp/gtcrn_vctk_full_* | tail -1)
 # Example: Evaluate milestone epoch 100 on val/
@@ -71,6 +71,9 @@ python infer_dir.py --adapter setrain_model --checkpoint $RUN/checkpoints/model_
 se_eval --enhanced out/val_ep100 --clean ~/data/VCTK-DEMAND/val/clean \
         --name gtcrn-val-ep100 --dataset vctk-demand-val
 ```
+
+Choose the checkpoint with the best validation scores from your own se_eval rows; Week 7 tests its
+`model_<epoch>.tar`, and only that one.
 
 ---
 

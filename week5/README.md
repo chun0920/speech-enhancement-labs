@@ -94,7 +94,23 @@ Monitor live progress:
 ```bash
 tail -f train_vctk_full.log
 ```
-Checkpoints are saved every 10 epochs (`model_010.tar`, `model_020.tar`, ...) and the peak validation checkpoint is tracked as `best_model_<epoch>.tar`.
+Checkpoints are saved every 10 epochs (`model_010.tar`, `model_020.tar`, ...). At the end SEtrain also writes
+`best_model_<epoch>.tar`, but **do not use that file**: it is saved with a shallow copy (`state_dict().copy()`),
+so it holds the weights of the *last* epoch under the best epoch's name. In Week 6 you choose the checkpoint
+yourself, from your se_eval scores on `val/`, and use its `model_<epoch>.tar`.
+
+### If the training stops (reboot, the job is killed)
+
+Restart from the last saved checkpoint instead of from zero. In `configs/cfg_train_vctk_full.yaml` set:
+
+1. `resume: True`
+2. `resume_datetime:` the date and time at the end of your run folder, e.g. `2026-11-03-14h05m` for
+   `~/exp/gtcrn_vctk_full_2026-11-03-14h05m`
+3. `epochs:` the number of epochs **still to go**, e.g. 200 − 120 = 80 if `model_120.tar` is the newest
+   checkpoint. SEtrain trains `epochs` more epochs after the one it resumes from: leave 200 and it runs to epoch 320.
+
+Start it with the same `nohup` command. It continues from the newest `model_*.tar`, so up to 9 epochs are
+trained again. Write the restart (time, epoch) in your log.
 
 ---
 

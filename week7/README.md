@@ -67,8 +67,8 @@ Once all 7 checks pass:
 Run inference and evaluation on the real test set with your chosen checkpoint:
 ```bash
 RUN=$(ls -d ~/exp/gtcrn_vctk_full_* | tail -1)
-# Use your best checkpoint chosen from Week 6 (e.g. best_model_*.tar or model_200.tar)
-CKPT=$(ls $RUN/checkpoints/best_model_*.tar 2>/dev/null || echo "$RUN/checkpoints/model_200.tar")
+EP=200        # the epoch you chose in Week 6 from your se_eval scores on val/ (or 200, the last one)
+CKPT=$RUN/checkpoints/model_$(printf %03d $EP).tar   # never best_model_*.tar: it holds the last epoch's weights (Week 5)
 
 python infer_dir.py --adapter setrain_model --checkpoint $CKPT \
                     --noisy ~/data/VCTK-DEMAND/test/noisy --out out/test_enhanced

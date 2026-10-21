@@ -63,9 +63,9 @@ validation_dataloader:
 samplerate: 16000
 
 trainer:
-  epochs: 200                         # Week 5: full 200-epoch training schedule (~10 hours)
-  save_checkpoint_interval: 10        # saves model_010.tar, model_020.tar, ... plus best_model_<epoch>.tar
+  epochs: 200                         # Week 5: full 200-epoch training schedule (~10 hours); after a resume: the epochs still to go
+  save_checkpoint_interval: 10        # saves model_010.tar, model_020.tar, ... (also best_model_<epoch>.tar: do not use it, README)
   clip_grad_norm_value: 3.0
   exp_path: ${oc.env:HOME}/exp/gtcrn_vctk_full
-  resume: False                       # set True if interrupted
-  resume_datetime: 2026-10-22-10h00m
+  resume: False                       # True only to continue a stopped run (README: "If the training stops")
+  resume_datetime: 2026-10-22-10h00m  # with resume: True, the date-time at the end of your run folder

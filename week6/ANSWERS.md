@@ -7,7 +7,7 @@ Answer these questions as you complete Lab 1, Lab 2, and evaluate your training 
 ### Q1. Checkpoint Selection Strategy
 When selecting the final model checkpoint to report in Week 7, you could pick:
   (a) The checkpoint with lowest validation loss
-  (b) The checkpoint with highest validation PESQ (`best_model_*.tar`)
+  (b) The checkpoint with the highest validation PESQ in your own se_eval scores (its `model_<epoch>.tar`)
   (c) The last epoch (`model_200.tar`)
 Which one should you pick for a paper reproduction comparison, and why must you NEVER use the test set to choose the checkpoint?
 

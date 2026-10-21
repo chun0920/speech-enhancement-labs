@@ -35,7 +35,7 @@ If you had trained with SEtrain's default plain Hann window instead of the squar
 ---
 
 ### Q4. Checkpoint Selection Discipline
-Which checkpoint did you evaluate on the test set (`best_model_*.tar` or `model_200.tar`)?
+Which checkpoint did you evaluate on the test set (which `model_<epoch>.tar`), and how did you choose it?
 Did you evaluate multiple checkpoints on the test set, or did you evaluate only the one chosen on the validation set? Why does scientific rigor forbid "cherry-picking" checkpoints on the test set?
 
 > 
