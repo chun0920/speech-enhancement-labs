@@ -65,7 +65,8 @@ cp cfg_train_vctk_full.yaml ~/baselines/SEtrain/configs/
 ### 1.2 Note on the STFT Window (Engineering Decision)
 In Week 4 (Question Q2), you saw that GTCRN's official checkpoint scored **2.867 PESQ** with square-root Hann
 (`torch.hann_window(512).pow(0.5)`) vs **2.837 PESQ** with plain Hann.
-To ensure your trained model matches the paper's 2.87 result in Week 7:
+So that your model uses the same STFT as the model the paper's numbers came from (the official `infer.py` uses
+square-root Hann), and a gap in Week 7 cannot come from the window:
 In `~/baselines/SEtrain/models/gtcrn_end2end.py`, change line 309:
 ```python
 # From:
