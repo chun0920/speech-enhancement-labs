@@ -1,0 +1,3 @@
+system,dataset,pesq,stoi,sisdr,source
+noisy,vctk-demand-test,1.97,0.921,8.45,GTCRN Table 1
+gtcrn-paper,vctk-demand-test,2.87,0.940,18.83,GTCRN Table 1

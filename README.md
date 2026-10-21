@@ -11,11 +11,11 @@ The labs run in a terminal on the lab's Linux computers; full training (Weeks 5�
 | 3 ◆ | Your baseline: GTCRN's official checkpoint on the test set | [`week3/`](week3/) | |
 | 4 | Read GTCRN's code; run its training for a few epochs | [`week4/`](week4/) | |
 | 5 | Full training on lab112; dissect HybridLoss; monitor loss curves | [`week5/`](week5/) | |
-| 6 | Checkpoints scored on the validation set; causal architecture | coming | |
-| 7 ◆ | Your training against the paper's numbers | coming | |
-| 8 | Parameters, MACs, real-time factor | coming | |
-| 9 | Mismatched conditions; the comparison table; a demo page | coming | |
-| 10 ◆ | Report; a clean repository | coming | |
+| 6 | Checkpoints scored on the validation set; temporal causality verification | [`week6/`](week6/) | |
+| 7 ◆ | Final evaluation against Table 1; replication verification (<= 5% error margin) | [`week7/`](week7/) | |
+| 8 | Parameters, MACs (33 MMACs), real-time factor (RTF) & 16 ms streaming latency | [`week8/`](week8/) | |
+| 9 | Mismatched SNR stress testing; interactive HTML5 demo showcase | [`week9/`](week9/) | |
+| 10 ◆ | Repository hygiene audit, 15-minute presentation deck, master acceptance | [`week10/`](week10/) | |
 
 ◆ acceptance weeks, checked by Prof. Hung. Do the weeks in order: each folder has its own `README.md` —
 start there. Solutions for a week are added to [`solutions/`](solutions/) once that week is over.
