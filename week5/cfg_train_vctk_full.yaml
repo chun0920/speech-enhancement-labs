@@ -1,0 +1,71 @@
+# SEtrain configuration for GTCRN on VCTK-DEMAND - Week 5 full run (200 epochs).
+# Copy it to ~/baselines/SEtrain/configs/ and run:
+#   python train.py -C configs/cfg_train_vctk_full.yaml -D 0
+# Everything not marked "Week 5" matches SEtrain's configs/cfg_train.yaml.
+# ${oc.env:HOME} is your home folder (OmegaConf does not understand "~").
+
+network_config:
+  n_fft: 512
+  hop_len: 256
+  win_len: 512
+
+DDP:
+  world_size: 1                       # one GPU
+
+optimizer:
+  lr: 0.001
+
+scheduler:
+  kwargs:
+    warmup_steps: 25000               # 20 epochs warmup (1,250 steps/epoch)
+    decay_until_step: 250000          # 200 epochs total cosine decay
+    max_lr: 1e-3
+    min_lr: 1e-6
+  update_interval: step               # [step, epoch]
+
+FFT:
+  n_fft: 512
+  hop_length: 256
+  win_length: 512
+
+loss:
+  n_fft: ${FFT.n_fft}
+  hop_len: ${FFT.hop_length}
+  win_len: ${FFT.win_length}
+  compress_factor: 0.3
+  eps: 1e-12
+  lamda_ri: 30
+  lamda_mag: 70
+
+train_dataset:                        # VCTKDataset (dataloader_vctk.py)
+  clean_dir: ${oc.env:HOME}/data/VCTK-DEMAND/train/clean
+  noisy_dir: ${oc.env:HOME}/data/VCTK-DEMAND/train/noisy
+  train: True
+  limit: 0                            # all 10,000 pairs
+
+train_dataloader:
+  batch_size: 8
+  num_workers: 4
+  drop_last: True
+  pin_memory: True
+
+validation_dataset:
+  clean_dir: ${oc.env:HOME}/data/VCTK-DEMAND/val/clean
+  noisy_dir: ${oc.env:HOME}/data/VCTK-DEMAND/val/noisy
+  train: False
+  limit: 0                            # all 1,572 pairs
+
+validation_dataloader:
+  batch_size: 4
+  num_workers: 4
+  pin_memory: True
+
+samplerate: 16000
+
+trainer:
+  epochs: 200                         # Week 5: full 200-epoch training schedule (~10 hours)
+  save_checkpoint_interval: 10        # saves model_010.tar, model_020.tar, ... plus best_model_<epoch>.tar
+  clip_grad_norm_value: 3.0
+  exp_path: ${oc.env:HOME}/exp/gtcrn_vctk_full
+  resume: False                       # set True if interrupted
+  resume_datetime: 2026-10-22-10h00m

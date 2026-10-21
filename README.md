@@ -10,7 +10,8 @@ The labs run in a terminal on the lab's Linux computers; full training (Weeks 5�
 | 2 | Seeing and scoring noise: STFT, spectrograms, SI-SDR / PESQ / STOI | [`week2/`](week2/) | [`solutions/week2/`](solutions/week2/) |
 | 3 ◆ | Your baseline: GTCRN's official checkpoint on the test set | [`week3/`](week3/) | |
 | 4 | Read GTCRN's code; run its training for a few epochs | [`week4/`](week4/) | |
-| 5–6 | Full training; loss and metric curves; checkpoints scored on the validation set | coming | |
+| 5 | Full training on lab112; dissect HybridLoss; monitor loss curves | [`week5/`](week5/) | |
+| 6 | Checkpoints scored on the validation set; causal architecture | coming | |
 | 7 ◆ | Your training against the paper's numbers | coming | |
 | 8 | Parameters, MACs, real-time factor | coming | |
 | 9 | Mismatched conditions; the comparison table; a demo page | coming | |
