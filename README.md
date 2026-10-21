@@ -28,25 +28,13 @@ start there. Solutions for a week are added to [`solutions/`](solutions/) once t
 
 ## Getting the labs onto a computer
 
-This repository is private, so the computer needs your permission to download it. You do this once.
-
-**1. Accept the invitation.** Your mentor adds you as a collaborator; accept the e-mail or the
-notification on github.com.
-
-**2. Make a token** (GitHub no longer accepts your password on the command line):
-github.com → your picture → **Settings** → **Developer settings** → **Personal access tokens** →
-**Tokens (classic)** → **Generate new token (classic)**. Tick the **`repo`** box, choose an expiry
-date, generate, and copy the token (it starts with `ghp_`). You will not see it again.
-
-**3. Clone:**
+This repository is public. Clone it directly onto your computer:
 
 ```bash
-git config --global credential.helper 'cache --timeout=86400'   # remember the token for a day
 git clone https://github.com/chun0920/speech-enhancement-labs.git ~/speech-enhancement-labs
 ```
 
-Username: your GitHub username. Password: paste the token. A new computer needs more than git — Week 3's
-README, Step 0, lists everything.
+A new computer needs more than git — Week 3's README, Step 0, lists everything.
 
 ## Work on a copy, not in the clone
 
