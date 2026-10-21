@@ -19,7 +19,8 @@ for name in ("torch", "numpy", "soundfile", "einops", "pesq", "thop"):
     try:
         line(True, f"import {name:<12}{getattr(importlib.import_module(name), '__version__', '')}")
     except Exception as e:
-        line(False, f"import {name:<12}-> {e}  (README, Step 0: pip install thop==0.1.1.post2209072238)")
+        hint = "pip install thop==0.1.1.post2209072238" if name == "thop" else "README, Step 0"
+        line(False, f"import {name:<12}-> {e}  ({hint})")
 try:
     import torch
     line(torch.cuda.is_available(), f"GPU: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'none visible'}")
