@@ -54,16 +54,9 @@ All 5 checks must pass with **All done!**.
 
 ## Step 2 — Prepare Presentation Slides (≈ 60 min)
 
-Open `final_presentation_template.md` and build your 15-minute slide deck:
-- Slide 1: Title & Executive Summary
-- Slide 2: Problem Formulation & Low-Latency Telephony Constraints
-- Slide 3: GTCRN Architecture (ERB, Squeezed Conv, DPGRNN)
-- Slide 4: Training Methodology & Loss Curves
-- Slide 5: Table 1 Reproduction Results (PESQ 2.87, STOI 0.940, SI-SDR 18.83 dB)
-- Slide 6: Computational Efficiency (23.7 K trainable params, 33.0 MMACs, RTF < 0.05)
-- Slide 7: Mismatched SNR Stress Testing (-5 dB to +15 dB)
-- Slide 8: Interactive Audio Showcase Demo
-- Slide 9: Conclusion & Master's Thesis Research Proposal
+Open `final_presentation_template.md` and build your 15-minute slide deck. It lists nine slides
+(task, model, training, reproduction, efficiency, mismatched conditions, listening, lessons) and, for each
+one, the file from an earlier week that the numbers must come from.
 
 ---
 
