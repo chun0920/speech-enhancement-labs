@@ -63,7 +63,7 @@ Complete the exercises:
 3. `format_test_eval_run()`: Formats commands for test set inference and `se_eval`.
 4. `load_reproduced_numbers()`: Extracts reproduced test metrics from `results/eval_summary.csv`.
 
-Once all 7 checks pass:
+Once all 8 checks pass (the last one checks that your `~/data/VCTK-DEMAND/test` has the course fingerprints):
 Run inference and evaluation on the real test set with your chosen checkpoint:
 ```bash
 RUN=$(ls -d ~/exp/gtcrn_vctk_full_* | tail -1)
@@ -90,7 +90,8 @@ Complete the exercises:
 3. `classify_reproduction()`: Evaluates the $\le 5\%$ threshold.
 4. `generate_reproduction_report()`: Generates `results/reproduction_report.md`.
 
-Once all 8 checks pass, run it against your reproduced numbers to generate your acceptance report!
+Once all 8 checks pass and your test-set row (`--name gtcrn-reproduced`, Step 1) is in `results/eval_summary.csv`,
+the same command writes `results/reproduction_report.md` from your numbers and the paper's.
 
 ---
 
@@ -103,7 +104,7 @@ Answer questions Q1–Q8 in `ANSWERS.md` and prepare to present `results/reprodu
 ## Hand-in
 
 Your folder `week7_<yourname>/` containing:
-- Both lab scripts completed (Lab 1 7/7, Lab 2 8/8)
+- Both lab scripts completed (Lab 1 8/8, Lab 2 8/8)
 - `results/eval_summary.csv` containing the `gtcrn-reproduced` row on `vctk-demand-test`
-- `results/reproduction_report.md` showing **SUCCESS**
+- `results/reproduction_report.md`, whatever status it shows; if it is not SUCCESS, the reasons go into `ANSWERS.md`
 - `ANSWERS.md` filled in

@@ -25,9 +25,6 @@ for name in ("torch", "numpy", "soundfile", "einops", "pesq"):
 git_path = shutil.which("git")
 line(bool(git_path), f"git executable: {git_path or 'NOT FOUND'}")
 
-for f in ("my_model.py", "infer_dir.py"):
-    line(Path(f).exists(), f"{f} present in this folder (Step 0)")
-
 print()
 if problems:
     print(f"{len(problems)} problem(s) - fine if they belong to a step you have not done yet.")

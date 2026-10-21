@@ -77,6 +77,9 @@ def calculate_algorithmic_latency(win_len=512, sample_rate=16000):
 def verify_temporal_causality(model_fn, x, cutoff_step, time_dim=None, tol=1e-5):
     """Verify temporal causality via future-perturbation testing.
 
+    time_dim is the time axis. If None: 2 for a 4-D spectrogram (B, F, T, 2), the last axis otherwise.
+    Both the perturbation and the comparison are along this axis.
+
     Protocol:
       1. Run model_fn on original input: y1 = model_fn(x)
       2. Construct perturbed input x_pert:
@@ -150,6 +153,15 @@ if __name__ == "__main__":
           lambda: non_causal_res is False and non_causal_diff > 1e-3,
           "symmetric convolution leaks future perturbation backward into past")
 
+    spec = torch.randn(1, 257, 20, 2)                               # (B, F, T, 2), like GTCRN's input
+    try:
+        nc4_res, nc4_diff = verify_temporal_causality(lambda s: (s + s.roll(-1, dims=2)) / 2, spec, cutoff_step=10)
+    except NotImplementedError:
+        nc4_res, nc4_diff = True, 0.0
+    check("detects future leakage along the time axis of a (B, F, T, 2) spectrogram",
+          lambda: nc4_res is False and nc4_diff > 1e-3,
+          "each output frame here mixes in the next frame; for 4-D input the time axis is dim 2")
+
     print(f"\n--- Testing Causality on real {getattr(my_model, 'MODEL_NAME', 'model')} ---")
     try:
         model = my_model.build_model("cpu")
@@ -160,6 +172,7 @@ if __name__ == "__main__":
         gtcrn_causal_res, gtcrn_diff = False, 999.0
     except Exception as e:
         gtcrn_causal_res, gtcrn_diff = False, 999.0
+        print(f"  could not run the model: {type(e).__name__}: {e}")
 
     print(f"  {getattr(my_model, 'MODEL_NAME', 'model')} past max diff: {gtcrn_diff}")
     check(f"confirms real {getattr(my_model, 'MODEL_NAME', 'model')} produces 0 difference on past frames",

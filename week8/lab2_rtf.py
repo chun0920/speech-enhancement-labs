@@ -73,17 +73,12 @@ def measure_chunk_latency_ms(chunk_fn, is_cuda=False, warmup=5, trials=20):
 
 # ---------------------------------------------------------------- Exercise 2.4
 def generate_efficiency_table(results_dict, out_path):
-    """Generate a clean Markdown efficiency benchmark table.
+    """Write a Markdown efficiency table to out_path and return its text.
 
-    results_dict format:
-      {
-        "hardware": str,
-        "cpu_rtf": float,
-        "gpu_rtf": float (or None),
-        "chunk_latency_ms": float,
-        "params_k": float,
-        "mmacs": float
-      }
+    results_dict: {"hardware": str, "cpu_rtf": float, "gpu_rtf": float or None, "chunk_latency_ms": float,
+                   "params_k": float, "mmacs": float}
+    One row per number, with the real-time threshold next to it where there is one. Write the CPU RTF with
+    4 decimals (e.g. 0.0250) and the time per frame with 2 decimals and " ms" (e.g. "7.70 ms").
     """
     # TODO
     raise NotImplementedError

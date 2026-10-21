@@ -144,7 +144,12 @@ Complete the three exercises:
 2. `parse_training_log()`: Extracts `train_loss`, `val_loss`, and `val_pesq` across epochs from training logs.
 3. `analyze_convergence()`: Identifies the epoch with peak validation PESQ, lowest validation loss, and checks overall convergence health.
 
-When your actual lab112 training has completed 10–20+ epochs, you can feed your real `train_vctk_full.log` into `lab2_monitor.py` to generate your real `results/training_curves.csv`.
+Your own curves: when the training on lab112 has run for a while (and again at the end), give the lab
+your training log. It writes `results/training_curves.csv` from that log only:
+
+```bash
+python lab2_monitor.py ~/baselines/SEtrain/train_vctk_full.log
+```
 
 ---
 
@@ -173,7 +178,7 @@ Answer questions Q1–Q8 in `ANSWERS.md`:
 
 Your folder `week5_<yourname>/` containing:
 - Both lab scripts finished (`lab1_loss.py` 9/9, `lab2_monitor.py` 11/11, both ending with **All done!**)
-- `results/training_curves.csv` (generated from training log or monitor)
+- `results/training_curves.csv`, made from your own log (`python lab2_monitor.py <your log>`)
 - `ANSWERS.md` filled in
 - Master's students: `report2_template.md` filled in
 

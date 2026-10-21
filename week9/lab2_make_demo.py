@@ -52,16 +52,19 @@ def downsample_waveform_envelope(waveform, num_points=100):
 
 # ---------------------------------------------------------------- Exercise 2.2
 def generate_svg_waveform(envelope_points, width=400, height=80, color="#2563eb"):
-    """Generate an inline SVG waveform string from envelope points.
+    """An inline SVG picture of a waveform, as a string.
+
+    One <rect> bar per envelope point, side by side across `width`, reaching from the point's min to its max
+    (scaled so that an amplitude of 1.0 stays inside the picture), filled with `color`.
 
     Args:
       envelope_points: list of (min_val, max_val) tuples
       width: SVG viewbox width
       height: SVG viewbox height
-      color: hex color string for waveform bars
+      color: hex color string for the bars
 
     Returns:
-      svg_string: valid XML/SVG element string
+      svg_string: starts with "<svg" and ends with "</svg>"
     """
     # TODO
     raise NotImplementedError
@@ -69,7 +72,10 @@ def generate_svg_waveform(envelope_points, width=400, height=80, color="#2563eb"
 
 # ---------------------------------------------------------------- Exercise 2.3
 def build_html_demo(samples_list, out_html_path, title="GTCRN Speech Enhancement Showcase"):
-    """Build a standalone, responsive HTML5 audio comparison demo page.
+    """Build a standalone HTML demo page, write it to out_html_path and return its text.
+
+    One card per entry of samples_list, showing its "id", "noise_type" and "snr", and three players -
+    noisy, enhanced, clean - each an <audio controls src="..."> with the waveform SVG next to it.
 
     samples_list format:
       [
@@ -85,6 +91,7 @@ def build_html_demo(samples_list, out_html_path, title="GTCRN Speech Enhancement
           "clean_svg": "<svg ...>"
         }, ...
       ]
+    The audio paths are relative to the page.
     """
     # TODO
     raise NotImplementedError

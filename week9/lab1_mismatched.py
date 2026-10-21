@@ -159,8 +159,8 @@ if __name__ == "__main__":
             report_md, has_report = "", False
 
         check("formats markdown report with all SNR rows",
-              lambda: has_report and "+15 dB" in report_md and "outside the training range" in report_md,
-              "one row per SNR (e.g. +15 dB); the last column says whether the SNR is inside 0-15 dB")
+              lambda: has_report and "15 dB" in report_md and "outside the training range" in report_md,
+              "one row per SNR (e.g. 15 dB); the last column says whether the SNR is inside 0-15 dB")
 
     n, p = len(_passed), sum(_passed)
     print(f"\n{p}/{n} checks passed. " + ("All done!" if p == n else "Fix the FAIL lines and run again."))

@@ -73,7 +73,8 @@ se_eval --enhanced out/val_ep100 --clean ~/data/VCTK-DEMAND/val/clean \
 ```
 
 Choose the checkpoint with the best validation scores from your own se_eval rows; Week 7 tests its
-`model_<epoch>.tar`, and only that one.
+`model_<epoch>.tar`, and only that one. Once your validation rows are in `results/eval_summary.csv`,
+`python lab1_checkpoint_eval.py` also prints which one Exercise 1.4 picks.
 
 ---
 
@@ -88,7 +89,7 @@ Finish the three exercises:
 2. `calculate_algorithmic_latency()`: Computes the algorithmic latency of causal STFT processing: one window, not one hop.
 3. `verify_temporal_causality()`: Injects random perturbations into future audio samples ($t \ge T_0$) and proves that past enhanced audio ($t < T_0$) is unaffected.
 
-Run until all 7 checks show `[PASS]` and you see **All done!**.
+Run until all 8 checks show `[PASS]` and you see **All done!**.
 
 ---
 
@@ -112,7 +113,7 @@ Answer questions Q1–Q8 in `ANSWERS.md`.
 ## Hand-in
 
 Your folder `week6_<yourname>/` containing:
-- Both lab scripts finished (`lab1_checkpoint_eval.py` 9/9, `lab2_causality.py` 7/7, both showing **All done!**)
+- Both lab scripts finished (`lab1_checkpoint_eval.py` 9/9, `lab2_causality.py` 8/8, both showing **All done!**)
 - `results/eval_summary.csv` with evaluated validation milestones
 - `ANSWERS.md` filled in
 - Master's students: `report3_template.md` filled in

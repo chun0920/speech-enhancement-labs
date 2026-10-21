@@ -12,6 +12,7 @@ In this final lab, you:
   4. Generate a comprehensive audit score card in results/repo_audit_report.md
 """
 import os
+import sys
 from pathlib import Path
 
 _passed = []
@@ -65,14 +66,15 @@ def audit_gitignore_rules(gitignore_path, required_keywords=("*.tar", "__pycache
 
 # ---------------------------------------------------------------- Exercise 1.3
 def audit_course_deliverables(root_dir, required_items):
-    """Check that required deliverables exist across the 10-week curriculum.
+    """Check which of the required deliverables exist under root_dir.
 
     Args:
-      root_dir: student repository root path
-      required_items: list of relative paths to check
+      root_dir: your group's repository folder
+      required_items: list of paths relative to root_dir
 
     Returns:
-      (completion_rate: float, found_items: list, missing_items: list)
+      (completion_rate, found_items, missing_items): completion_rate is the fraction found, from 0.0 to 1.0
+      (2 of 3 found -> 0.667); found_items and missing_items keep the order of required_items
     """
     # TODO
     raise NotImplementedError
@@ -80,25 +82,34 @@ def audit_course_deliverables(root_dir, required_items):
 
 # ---------------------------------------------------------------- Exercise 1.4
 def generate_audit_report(size_violations, gitignore_status, deliverables_status, out_path):
-    """Format audit results into results/repo_audit_report.md."""
+    """Write the audit as Markdown to out_path and return its text.
+
+    size_violations: from audit_file_sizes(); gitignore_status: (is_valid, missing) from audit_gitignore_rules();
+    deliverables_status: (rate, found, missing) from audit_course_deliverables().
+    The report starts with the title "# Final Repository Hygiene Audit", lists the files over 10 MB, the
+    missing .gitignore patterns and the missing deliverables, and ends with the verdict
+    "PASS (Ready for Acceptance)" when there is nothing to list, otherwise "NOT READY" and what to fix.
+    """
     # TODO
     raise NotImplementedError
 
 
 # ================================================================ Test Suite
+REQUIRED = ["README.md", ".gitignore", "configs/cfg_train_vctk_full.yaml",
+            "results/week3_table.md", "results/training_curves.csv", "results/reproduction_report.md",
+            "results/efficiency_table.md", "results/stress_test_report.md", "results/comparison_table.md",
+            "demo/index.html"]
+
+
 if __name__ == "__main__":
     import tempfile
 
     print("--- Testing Exercise 1.1: audit_file_sizes ---")
     with tempfile.TemporaryDirectory() as tmp:
-        p_small = Path(tmp) / "small.txt"
-        p_small.write_text("hello" * 100, encoding="utf-8")
-        p_big = Path(tmp) / "big.bin"
-        p_big.write_bytes(b"\x00" * 2048)  # 2 KB
-
+        (Path(tmp) / "small.txt").write_text("hello" * 100, encoding="utf-8")
+        (Path(tmp) / "big.bin").write_bytes(b"\x00" * 2048)  # 2 KB
         try:
-            # Test with 1 KB threshold
-            viols = audit_file_sizes(tmp, max_mb=0.001)  # ~1 KB
+            viols = audit_file_sizes(tmp, max_mb=0.001)        # about 1 KB
         except NotImplementedError:
             viols = []
 
@@ -119,7 +130,6 @@ if __name__ == "__main__":
               lambda: valid and len(miss) == 0,
               "expected valid=True and empty missing list")
 
-        # Test missing keyword
         gi_bad = Path(tmp) / "bad.gitignore"
         gi_bad.write_text("*.log\n", encoding="utf-8")
         try:
@@ -135,29 +145,44 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory() as tmp:
         (Path(tmp) / "report1.md").write_text("# R1", encoding="utf-8")
         (Path(tmp) / "report2.md").write_text("# R2", encoding="utf-8")
-        reqs = ["report1.md", "report2.md", "report3.md"]
-
         try:
-            rate, fnd, mss = audit_course_deliverables(tmp, reqs)
+            rate, fnd, mss = audit_course_deliverables(tmp, ["report1.md", "report2.md", "report3.md"])
         except NotImplementedError:
-            rate, fnd, mss = 0.0, [], reqs
+            rate, fnd, mss = 0.0, [], ["report1.md", "report2.md", "report3.md"]
 
-        check("computes deliverable completion rate accurately (2/3 = 66.7%)",
+        check("computes deliverable completion rate accurately (2 of 3 = 0.667)",
               lambda: abs(rate - (2.0 / 3.0)) < 0.01 and "report3.md" in mss,
-              "expected 66.7% completion with report3.md missing")
+              "a fraction from 0.0 to 1.0, with report3.md missing")
 
     print("\n--- Testing Exercise 1.4: generate_audit_report ---")
     with tempfile.TemporaryDirectory() as tmp:
         out_f = Path(tmp) / "results" / "repo_audit_report.md"
         try:
             rep = generate_audit_report([], (True, []), (1.0, ["rep1.md"], []), out_f)
-            has_rep = out_f.exists() and "Ready for Acceptance" in out_f.read_text(encoding="utf-8")
+            has_rep = out_f.exists() and "PASS (Ready for Acceptance)" in out_f.read_text(encoding="utf-8")
+            rep_bad = generate_audit_report([("ckpt.tar", 25.0)], (True, []), (0.5, ["a"], ["b"]),
+                                            Path(tmp) / "bad.md")
         except NotImplementedError:
-            rep, has_rep = "", False
+            rep, has_rep, rep_bad = "", False, ""
 
-        check("writes audit markdown report with PASS status",
-              lambda: has_rep and "Final Repository Hygiene" in rep,
-              "expected markdown report with PASS status")
+        check("writes the report: title, and PASS only when nothing is missing",
+              lambda: has_rep and "Final Repository Hygiene Audit" in rep
+              and "NOT READY" in rep_bad and "ckpt.tar" in rep_bad,
+              "title '# Final Repository Hygiene Audit'; last line PASS (Ready for Acceptance) or NOT READY")
+
+    if len(sys.argv) > 1:                        # python lab1_audit_repo.py <your group's repository>
+        repo = Path(sys.argv[1]).expanduser()
+        print(f"\n--- Your repository: {repo} ---")
+        try:
+            report = generate_audit_report(audit_file_sizes(repo), audit_gitignore_rules(repo / ".gitignore"),
+                                           audit_course_deliverables(repo, REQUIRED),
+                                           Path("results") / "repo_audit_report.md")
+            print(report.splitlines()[-1])
+            print("  saved results/repo_audit_report.md")
+        except NotImplementedError:
+            print("  finish the exercises first")
+    else:
+        print("\n  Your group's repository: python lab1_audit_repo.py <its folder>")
 
     n, p = len(_passed), sum(_passed)
     print(f"\n{p}/{n} checks passed. " + ("All done!" if p == n else "Fix the FAIL lines and run again."))

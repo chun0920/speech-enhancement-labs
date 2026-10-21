@@ -75,7 +75,12 @@ def classify_reproduction(pesq_gap, stoi_gap, sisdr_gap):
 
 # ---------------------------------------------------------------- Exercise 2.4
 def generate_reproduction_report(reproduced, paper, out_path):
-    """Generate a markdown report comparing reproduced metrics with paper Table 1."""
+    """Write a Markdown report to out_path comparing `reproduced` with `paper` (both dicts with 'pesq', 'stoi',
+    'sisdr'), and return (status, max_gap) from classify_reproduction().
+
+    The report states the status (SUCCESS / ACCEPTABLE_WITH_EXPLANATION / NEEDS_INVESTIGATION) and, for each
+    metric, the paper's value, yours and the relative gap in %.
+    """
     # TODO
     raise NotImplementedError
 
@@ -152,6 +157,20 @@ if __name__ == "__main__":
         check("generates markdown report with SUCCESS status",
               lambda: stat == "SUCCESS" and has_report,
               "expected reproduction_report.md created with SUCCESS")
+
+    print("\n--- Your reproduction report ---")
+    try:
+        from lab1_final_eval import load_reproduced_numbers
+        paper = load_paper_numbers("paper_numbers.csv").get("gtcrn-paper")
+        ours = load_reproduced_numbers(Path("results") / "eval_summary.csv", "gtcrn-reproduced")
+        if paper and ours:
+            status, gap = generate_reproduction_report(ours, paper, Path("results") / "reproduction_report.md")
+            print(f"  saved results/reproduction_report.md: {status} (largest gap {gap:.2f} %)")
+        else:
+            print("  not yet: score your checkpoint on the test set with se_eval --name gtcrn-reproduced "
+                  "(README, Step 1), then run this again")
+    except NotImplementedError:
+        print("  finish the exercises here and in lab1_final_eval.py first")
 
     n, p = len(_passed), sum(_passed)
     print(f"\n{p}/{n} checks passed. " + ("All done!" if p == n else "Fix the FAIL lines and run again."))

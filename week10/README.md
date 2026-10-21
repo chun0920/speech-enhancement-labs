@@ -29,26 +29,41 @@ Prerequisites: All completed code, models, reports, and demos from Weeks 1–9.
 
 ```bash
 cp -r ~/speech-enhancement-labs/week10 ~/week10_<yourname> && cd ~/week10_<yourname>
-cp ~/week9_<yourname>/my_model.py ~/week9_<yourname>/infer_dir.py .
 conda activate se
 python check_env.py
 ```
 
 ---
 
-## Step 1 — Automated Repository Hygiene Audit (Lab 1, ≈ 30 min)
+## Step 1 — Your group's repository and its audit (Lab 1, ≈ 60 min)
+
+**1a.** Finish the four TODOs of `lab1_audit_repo.py` and run `python lab1_audit_repo.py` until you see
+**All done!** (5 checks).
+
+**1b.** Put your group's work into one repository of its own — never into `speech-enhancement-labs`, which you
+must not push to. Your mentor tells you where it goes (e.g. a private GitHub repository of your group). It needs
+at least these files, copied from your week folders:
+
+| File in your repository | From |
+|---|---|
+| `README.md` | write it: what is in the repository and how to run the evaluation |
+| `.gitignore` | must contain `*.tar`, `__pycache__` and `.venv`: checkpoints and environments stay out of git |
+| `configs/cfg_train_vctk_full.yaml` | Week 5 |
+| `results/week3_table.md` | Week 3 |
+| `results/training_curves.csv` | Week 5 (`python lab2_monitor.py <your log>`) |
+| `results/reproduction_report.md` | Week 7 |
+| `results/efficiency_table.md` | Week 8 |
+| `results/stress_test_report.md`, `results/comparison_table.md` | Week 9 |
+| `demo/` (`index.html` and `audio/`) | Week 9 |
+
+Then audit it from this folder:
 
 ```bash
-python lab1_audit_repo.py
+python lab1_audit_repo.py ~/<your repository>
 ```
 
-Complete the exercises:
-1. `audit_file_sizes()`: Flags any files exceeding the 10 MB GitHub threshold.
-2. `audit_gitignore_rules()`: Verifies essential ignore patterns for checkpoints and environments.
-3. `audit_course_deliverables()`: Checks presence and completeness of all required milestones.
-4. `generate_audit_report()`: Exports `results/repo_audit_report.md`.
-
-All 5 checks must pass with **All done!**.
+It writes `results/repo_audit_report.md` here: files over 10 MB, missing `.gitignore` patterns, missing files.
+Fix them and run it again until the report ends with **PASS (Ready for Acceptance)**.
 
 ---
 
@@ -68,8 +83,8 @@ Answer questions Q1–Q6 in `ANSWERS.md`.
 
 ## Hand-in
 
-Your completed `speech-enhancement-labs` student repository containing:
-- Clean git history with zero oversized files
-- `results/repo_audit_report.md` showing **PASS (Ready for Acceptance)**
-- Your completed slide deck (PDF or Markdown)
+- Your group's repository (Step 1b)
+- `results/repo_audit_report.md` from this folder, ending with **PASS (Ready for Acceptance)**
+- `lab1_audit_repo.py` finished (5/5)
+- Your slide deck (PDF or Markdown)
 - `ANSWERS.md` filled in

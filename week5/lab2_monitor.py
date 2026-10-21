@@ -14,6 +14,7 @@ This lab builds the monitoring toolkit:
 """
 import math
 import re
+import sys
 from pathlib import Path
 
 RESULTS = Path("results")
@@ -179,9 +180,21 @@ validate[4/200][2026-10-21-18:45] valid_loss=1.820, pesq=1.950
           lambda: analysis.get("is_healthy") is True,
           "both train and val loss decreased, so is_healthy is True")
 
-    if parsed:
-        csv_file = write_curves_csv(parsed, RESULTS / "training_curves.csv")
-        print(f"\n  Exported training curves to {csv_file}")
+    if len(sys.argv) > 1:                        # python lab2_monitor.py <your train_vctk_full.log>
+        log = Path(sys.argv[1]).expanduser()
+        try:
+            real = parse_training_log(log.read_text(encoding="utf-8", errors="replace"))
+            summary_real = analyze_convergence(real) if real else {}
+        except NotImplementedError:
+            real, summary_real = {}, {}
+        if real:
+            csv_file = write_curves_csv(real, RESULTS / "training_curves.csv")
+            print(f"\n  {log}: {len(real)} epochs -> {csv_file}")
+            print(f"  {summary_real}")
+        else:
+            print(f"\n  {log}: no epochs found - finish the exercises, and give the log of train.py")
+    else:
+        print("\n  Your own curves: python lab2_monitor.py ~/baselines/SEtrain/train_vctk_full.log")
 
     n, p = len(_passed), sum(_passed)
     print(f"\n{p}/{n} checks passed. " + ("All done!" if p == n else "Fix the FAIL lines and run again."))

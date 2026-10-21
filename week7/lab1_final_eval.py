@@ -38,12 +38,12 @@ def check(name, fn, hint=""):
 
 # ---------------------------------------------------------------- Exercise 1.1
 def compute_folder_fingerprint(folder_path):
-    """Compute an 8-byte hex fingerprint of all .wav files in a folder.
-
-    Algorithm (matches prepare_vctk_demand.py):
-      1. Find all .wav files, sorted by filename
-      2. Hash their sorted names and sizes with SHA256
-      3. Return the first 16 hex characters (8 bytes)
+    """The course fingerprint of a folder of .wav files - the same algorithm as prepare_vctk_demand.py:
+      1. go through the .wav files sorted by file name
+      2. for each file, feed  name + "\\t" + (the SHA256 hex digest of the file's bytes) + "\\n"  (UTF-8)
+         into one running SHA256
+      3. return the first 16 hex characters of that SHA256
+    Return "" if the folder does not exist.
     """
     # TODO
     raise NotImplementedError
@@ -63,18 +63,24 @@ def verify_test_fingerprints(test_dir, expected=OFFICIAL_FINGERPRINTS):
 
 # ---------------------------------------------------------------- Exercise 1.3
 def format_test_eval_run(checkpoint_path, out_dir, test_clean, test_noisy, name):
-    """Generate commands to run inference and se_eval on the final test set."""
+    """The two commands that score the chosen checkpoint on the test set, as strings:
+      infer_cmd: python infer_dir.py --adapter setrain_model --checkpoint <checkpoint_path> --noisy <test_noisy> --out <out_dir>
+      eval_cmd:  se_eval --enhanced <out_dir> --clean <test_clean> --name <name> --dataset vctk-demand-test
+
+    Returns:
+      (infer_cmd, eval_cmd)
+    """
     # TODO
     raise NotImplementedError
 
 
 # ---------------------------------------------------------------- Exercise 1.4
 def load_reproduced_numbers(eval_summary_csv, model_name):
-    """Read results/eval_summary.csv and extract the row for model_name on vctk-demand-test.
+    """From se_eval's results/eval_summary.csv, the LAST row with this name on vctk-demand-test (the file only
+    grows, so the newest score is the last one). se_eval's columns are named PESQ, STOI and SI-SDR.
 
     Returns:
-      dict with keys: 'name', 'dataset', 'pesq', 'stoi', 'sisdr'
-      or None if not found.
+      {'name': str, 'dataset': str, 'pesq': float, 'stoi': float, 'sisdr': float}, or None if there is no such row
     """
     # TODO
     raise NotImplementedError
@@ -117,7 +123,8 @@ if __name__ == "__main__":
 
     print("\n--- Testing Exercise 1.3: format_test_eval_run ---")
     try:
-        inf_cmd, ev_cmd = format_test_eval_run("exp/best.tar", "out/test_enh", "~/data/test/clean", "~/data/test/noisy", "gtcrn-reproduced")
+        inf_cmd, ev_cmd = format_test_eval_run("exp/run/checkpoints/model_150.tar", "out/test_enh",
+                                               "~/data/test/clean", "~/data/test/noisy", "gtcrn-reproduced")
     except NotImplementedError:
         inf_cmd, ev_cmd = "", ""
 
@@ -129,26 +136,38 @@ if __name__ == "__main__":
           "eval command must target dataset vctk-demand-test")
 
     print("\n--- Testing Exercise 1.4: load_reproduced_numbers ---")
+    header = ("date,name,dataset,n_files,PESQ,STOI,ESTOI,SI-SDR,DNSMOS_OVRL,DNSMOS_SIG,DNSMOS_BAK,DNSMOS_P808,"
+              "pesq_failed,cut_files,max_len_diff,enhanced_dir,clean_dir,se_eval_version,note")
+    example = ["2026-11-20,gtcrn-ep150,vctk-demand-val,1572,2.810,0.938,0.840,18.35" + "," * 11,
+               "2026-11-27,gtcrn-reproduced,vctk-demand-test,824,2.801,0.939,0.845,18.60" + "," * 11,
+               "2026-11-28,gtcrn-reproduced,vctk-demand-test,824,2.868,0.941,0.847,18.81" + "," * 11]
     with tempfile.TemporaryDirectory() as tmp:
         csv_file = Path(tmp) / "eval_summary.csv"
-        csv_file.write_text(
-            "name,dataset,pesq,stoi,estoi,sisdr\n"
-            "gtcrn-val,vctk-demand-val,2.810,0.938,0.840,18.35\n"
-            "gtcrn-reproduced,vctk-demand-test,2.868,0.941,0.847,18.81\n",
-            encoding="utf-8"
-        )
+        csv_file.write_text(header + "\n" + "\n".join(example) + "\n", encoding="utf-8")
         try:
             row = load_reproduced_numbers(csv_file, "gtcrn-reproduced")
             missing = load_reproduced_numbers(csv_file, "non-existent")
         except NotImplementedError:
             row, missing = None, 1
 
-        check("loads target row from eval_summary",
+        check("loads the newest test-set row (the last one) from se_eval's columns",
               lambda: row is not None and row["pesq"] == 2.868 and row["sisdr"] == 18.81,
-              "expected reproduced row loaded correctly")
+              "se_eval's columns are PESQ, STOI, SI-SDR; the file only grows, so take the last matching row")
         check("returns None when model is not found",
               lambda: missing is None,
               "missing model should return None")
+
+    print("\n--- Your test set ---")
+    test_dir = Path.home() / "data" / "VCTK-DEMAND" / "test"
+    try:
+        real_ok, real = verify_test_fingerprints(test_dir)
+    except NotImplementedError:
+        real_ok, real = False, {}
+    for side, (got, expected, _) in real.items():
+        print(f"  {side}: {got or '(no folder)'}  (course: {expected})")
+    check("your test set has the course fingerprints",
+          lambda: real_ok,
+          f"the data in {test_dir} must come from tools/se_eval/prepare_vctk_demand.py (Week 3)")
 
     n, p = len(_passed), sum(_passed)
     print(f"\n{p}/{n} checks passed. " + ("All done!" if p == n else "Fix the FAIL lines and run again."))

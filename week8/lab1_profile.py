@@ -37,10 +37,11 @@ def check(name, fn, hint=""):
 
 # ---------------------------------------------------------------- Exercise 1.1
 def count_parameters(model):
-    """Count parameters of a PyTorch module.
+    """Count the parameters of a PyTorch module.
 
     Returns:
       (total_params: int, trainable_params: int, fixed_params: int)
+      trainable = requires_grad True; fixed = requires_grad False (GTCRN's ERB matrices)
     """
     # TODO
     raise NotImplementedError
@@ -69,7 +70,12 @@ def profile_macs(model, input_tensor=None, device="cpu"):
 
 # ---------------------------------------------------------------- Exercise 1.3
 def format_efficiency_summary(total_p, train_p, fixed_p, mmacs):
-    """Format parameter count and MACs into a clean Markdown table string."""
+    """A Markdown table (returned as a string) of your measured numbers next to the published ones.
+
+    Parameters in thousands with 2 decimals and " K" (e.g. "23.67 K"); MACs with 2 decimals and
+    " MMACs" (e.g. "34.08 MMACs"). Published: the paper 23.7 K / 39.6 MMACs; the authors' repo, updated,
+    48.2 K / 33.0 MMACs (its README: the 48.2 K include the fixed ERB matrices).
+    """
     # TODO
     raise NotImplementedError
 
@@ -155,8 +161,9 @@ if __name__ == "__main__":
             print(f"  Note: format_efficiency_summary raised {type(e).__name__}: {e}")
 
         check("formats markdown table with measured GTCRN values",
-              lambda: f"{t_mmacs:.2f} MMACs" in summary_md and "23.67 K" in summary_md and "48.25 K" in summary_md,
-              "table must display measured MMACs and parameter counts")
+              lambda: f"{t_mmacs:.2f} MMACs" in summary_md and f"{g_trn / 1000:.2f} K" in summary_md
+              and f"{g_tot / 1000:.2f} K" in summary_md,
+              "your measured numbers: parameters in thousands with 2 decimals and ' K', MACs with 2 decimals and ' MMACs'")
     else:
         check("real GTCRN total parameters counted correctly (48,245)", lambda: False, "GTCRN model not loaded")
         check("real GTCRN trainable parameters counted correctly (23,669)", lambda: False, "GTCRN model not loaded")

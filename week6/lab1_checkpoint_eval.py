@@ -38,7 +38,7 @@ def find_available_checkpoints(checkpoint_dir):
 
     Matches:
       - 'model_010.tar', 'model_020.tar', etc.
-      - 'best_model_085.tar', etc.
+      - 'best_model_050.tar', etc. (listed so you see it; never evaluate it - it holds the last epoch, Week 5)
 
     Returns:
       sorted list of tuples: (epoch: int, is_best: bool, path: Path)
@@ -50,9 +50,11 @@ def find_available_checkpoints(checkpoint_dir):
 
 # ---------------------------------------------------------------- Exercise 1.2
 def format_eval_command(checkpoint_path, out_dir, clean_dir, noisy_dir, name, dataset="vctk-demand-val"):
-    """Generate command-line strings for running infer_dir and se_eval.
+    """The two commands that score one checkpoint on the validation set, as strings:
+      infer_cmd: python infer_dir.py --adapter setrain_model --checkpoint <checkpoint_path> --noisy <noisy_dir> --out <out_dir>
+      eval_cmd:  se_eval --enhanced <out_dir> --clean <clean_dir> --name <name> --dataset <dataset>
 
-    Returns a tuple of two command strings:
+    Returns:
       (infer_cmd, eval_cmd)
     """
     # TODO
@@ -61,25 +63,26 @@ def format_eval_command(checkpoint_path, out_dir, clean_dir, noisy_dir, name, da
 
 # ---------------------------------------------------------------- Exercise 1.3
 def parse_eval_summary(csv_path):
-    """Read results/eval_summary.csv and return rows as a list of dicts.
+    """Read se_eval's results/eval_summary.csv and return its rows as a list of dicts, in file order.
 
-    Each dict contains:
+    se_eval names its columns PESQ, STOI, ESTOI and SI-SDR. For every row that has a PESQ value:
       {"name": str, "dataset": str, "pesq": float, "stoi": float, "estoi": float, "sisdr": float}
+    Skip rows without PESQ (DNSMOS-only rows). Return [] if the file does not exist.
     """
     # TODO
     raise NotImplementedError
 
 
 # ---------------------------------------------------------------- Exercise 1.4
-def select_best_checkpoint(evaluated_records):
-    """Select the best checkpoint from evaluated validation records based on peak PESQ.
-
-    Args:
-      evaluated_records: list of dicts from parse_eval_summary()
+def select_best_checkpoint(evaluated_records, dataset="vctk-demand-val"):
+    """Pick the best checkpoint from the records of parse_eval_summary(), using ONLY the rows of `dataset`
+    (the validation set - never the test set) and skipping the row named "noisy" (no model).
+    Best = highest PESQ; on a tie, the higher SI-SDR.
 
     Returns:
-      (best_record: dict, rationale: str)
-      If empty, returns (None, "no checkpoints evaluated")
+      (best_record, rationale): rationale is one sentence with the record's name and its PESQ with 3 decimals,
+      e.g. "gtcrn-ep150: highest validation PESQ 2.810 (SI-SDR 18.35 dB)".
+      If no record qualifies: (None, "no checkpoints evaluated")
     """
     # TODO
     raise NotImplementedError
@@ -92,12 +95,8 @@ if __name__ == "__main__":
     print("--- Testing Exercise 1.1: find_available_checkpoints ---")
     with tempfile.TemporaryDirectory() as tmp:
         tmp_dir = Path(tmp)
-        (tmp_dir / "model_010.tar").touch()
-        (tmp_dir / "model_050.tar").touch()
-        (tmp_dir / "model_020.tar").touch()
-        (tmp_dir / "best_model_048.tar").touch()
-        (tmp_dir / "ignore_me.txt").touch()
-
+        for fname in ("model_010.tar", "model_050.tar", "model_020.tar", "best_model_050.tar", "ignore_me.txt"):
+            (tmp_dir / fname).touch()
         try:
             cps = find_available_checkpoints(tmp_dir)
         except NotImplementedError:
@@ -105,13 +104,13 @@ if __name__ == "__main__":
 
         check("finds all 4 checkpoints",
               lambda: len(cps) == 4,
-              "expected 4 tar checkpoints detected")
+              "expected 4 .tar checkpoints (the .txt file is not one)")
         check("sorts by epoch in ascending order",
-              lambda: [c[0] for c in cps] == [10, 20, 48, 50],
-              "epochs must be sorted 10, 20, 48, 50")
-        check("flags best_model correctly",
-              lambda: cps[2][1] is True and cps[0][1] is False,
-              "best_model_048 must have is_best=True")
+              lambda: [c[0] for c in cps] == [10, 20, 50, 50],
+              "epochs must be sorted 10, 20, 50, 50")
+        check("flags best_model correctly, after the regular checkpoint of the same epoch",
+              lambda: cps[2][1] is False and cps[3][1] is True,
+              "model_050.tar first (is_best=False), then best_model_050.tar (is_best=True)")
 
     print("\n--- Testing Exercise 1.2: format_eval_command ---")
     try:
@@ -130,27 +129,33 @@ if __name__ == "__main__":
           "se_eval command must include --name and --dataset")
 
     print("\n--- Testing Exercise 1.3: parse_eval_summary ---")
+    header = ("date,name,dataset,n_files,PESQ,STOI,ESTOI,SI-SDR,DNSMOS_OVRL,DNSMOS_SIG,DNSMOS_BAK,DNSMOS_P808,"
+              "pesq_failed,cut_files,max_len_diff,enhanced_dir,clean_dir,se_eval_version,note")
+
+    def row(name, dataset, n, pesq="", stoi="", estoi="", sisdr="", ovrl=""):     # one line in se_eval's format
+        return ",".join(["2026-11-20", name, dataset, n, pesq, stoi, estoi, sisdr, ovrl] + [""] * 10)
+
+    example = [row("noisy", "vctk-demand-val", "1572", "1.473", "0.839", "0.643", "6.23"),
+               row("gtcrn-ep010", "vctk-demand-val", "1572", "2.201", "0.880", "0.730", "14.50"),
+               row("gtcrn-ep050", "vctk-demand-val", "1572", "2.650", "0.925", "0.810", "17.20"),
+               row("gtcrn-ep100", "vctk-demand-val", "1572", "2.782", "0.935", "0.835", "18.10"),
+               row("gtcrn-ep150", "vctk-demand-val", "1572", "2.810", "0.938", "0.840", "18.35"),
+               row("gtcrn-ep150", "vctk-demand-test", "824", "2.900", "0.941", "0.847", "18.81"),
+               row("noisy", "dns3-blind-track1", "700", ovrl="2.347")]
     with tempfile.TemporaryDirectory() as tmp:
         csv_file = Path(tmp) / "eval_summary.csv"
-        csv_file.write_text(
-            "name,dataset,pesq,stoi,estoi,sisdr\n"
-            "gtcrn-ep010,vctk-demand-val,2.201,0.880,0.730,14.50\n"
-            "gtcrn-ep050,vctk-demand-val,2.650,0.925,0.810,17.20\n"
-            "gtcrn-ep100,vctk-demand-val,2.782,0.935,0.835,18.10\n"
-            "gtcrn-best,vctk-demand-val,2.810,0.938,0.840,18.35\n",
-            encoding="utf-8"
-        )
+        csv_file.write_text(header + "\n" + "\n".join(example) + "\n", encoding="utf-8")
         try:
             records = parse_eval_summary(csv_file)
         except NotImplementedError:
             records = []
 
-        check("parses all 4 rows from CSV",
-              lambda: len(records) == 4,
-              "expected 4 parsed records")
-        check("converts metrics to float correctly",
-              lambda: records[1]["pesq"] == 2.650 and records[1]["sisdr"] == 17.20,
-              "metric values must be floats")
+        check("parses the 6 rows that have PESQ (skips the DNSMOS-only row)",
+              lambda: len(records) == 6,
+              "se_eval's columns are PESQ, STOI, ESTOI, SI-SDR; skip rows whose PESQ is empty")
+        check("converts se_eval's metric columns to float",
+              lambda: records[2]["pesq"] == 2.650 and records[2]["sisdr"] == 17.20,
+              "keys pesq / stoi / estoi / sisdr, values float")
 
     print("\n--- Testing Exercise 1.4: select_best_checkpoint ---")
     try:
@@ -158,12 +163,20 @@ if __name__ == "__main__":
     except NotImplementedError:
         best_entry, why = None, ""
 
-    check("selects checkpoint with peak validation PESQ (gtcrn-best)",
-          lambda: best_entry is not None and best_entry["name"] == "gtcrn-best" and best_entry["pesq"] == 2.810,
-          "peak PESQ is 2.810 from gtcrn-best")
-    check("provides informative selection rationale",
-          lambda: "gtcrn-best" in why and "2.810" in why,
-          "rationale should state model name and score")
+    check("picks the best checkpoint on the validation set (not the higher test-set row)",
+          lambda: best_entry is not None and best_entry["name"] == "gtcrn-ep150"
+          and best_entry["dataset"] == "vctk-demand-val" and best_entry["pesq"] == 2.810,
+          "only rows of the validation set count; the test set is never used to choose")
+    check("gives the name and its PESQ in the rationale",
+          lambda: "gtcrn-ep150" in why and "2.810" in why,
+          "e.g. gtcrn-ep150: highest validation PESQ 2.810 (SI-SDR 18.35 dB)")
+
+    real = Path("results") / "eval_summary.csv"
+    if real.exists():
+        try:
+            print(f"\n  Your rows in {real}: {select_best_checkpoint(parse_eval_summary(real))[1]}")
+        except NotImplementedError:
+            pass
 
     n, p = len(_passed), sum(_passed)
     print(f"\n{p}/{n} checks passed. " + ("All done!" if p == n else "Fix the FAIL lines and run again."))
