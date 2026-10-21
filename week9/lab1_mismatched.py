@@ -78,7 +78,14 @@ def evaluate_snr_stress(enhance_fn, clean_signals, noise_signals, snr_levels=(-5
 
 # ---------------------------------------------------------------- Exercise 1.3
 def format_stress_test_report(stress_results, out_path):
-    """Format stress test results into a Markdown report and save to file."""
+    """Write stress_results (from evaluate_snr_stress) as a Markdown report to out_path; return the text.
+
+    A title, then a table with one row per SNR, lowest first:
+      | Input SNR | Noisy score | Enhanced score | Gain | Training range |
+      | -5 dB     | 1.23        | 1.45           | +0.22 | outside the training range |
+    The last column is "inside" for 0 to 15 dB (the SNRs the VCTK-DEMAND training set was mixed at) and
+    "outside the training range" otherwise. End with a heading "## Observations" for your own notes.
+    """
     # TODO
     raise NotImplementedError
 
@@ -152,8 +159,8 @@ if __name__ == "__main__":
             report_md, has_report = "", False
 
         check("formats markdown report with all SNR rows",
-              lambda: has_report and "15 dB" in report_md and "Extreme Breakdown" in report_md,
-              "report must contain all SNR rows and regime tags")
+              lambda: has_report and "+15 dB" in report_md and "outside the training range" in report_md,
+              "one row per SNR (e.g. +15 dB); the last column says whether the SNR is inside 0-15 dB")
 
     n, p = len(_passed), sum(_passed)
     print(f"\n{p}/{n} checks passed. " + ("All done!" if p == n else "Fix the FAIL lines and run again."))

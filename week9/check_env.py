@@ -20,14 +20,14 @@ for name in ("torch", "numpy", "soundfile", "einops", "pesq", "scipy"):
         line(True, f"import {name:<12}{getattr(importlib.import_module(name), '__version__', '')}")
     except Exception as e:
         line(False, f"import {name:<12}-> {e}  (README, Step 0)")
-try:
-    import torch
-    line(torch.cuda.is_available(), f"GPU: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'none visible'}")
-except Exception as e:
-    line(False, f"torch -> {e}")
-
-for f in ("my_model.py", "infer_dir.py"):
+for f in ("my_model.py", "setrain_model.py"):
     line(Path(f).exists(), f"{f} present in this folder (Step 0)")
+
+data = Path.home() / "data" / "VCTK-DEMAND"
+line(len(list((data / "test" / "clean").glob("*.wav"))) == 824, f"{data / 'test'}: the test set (Week 3)")
+line((data / "logfiles" / "log_testset.txt").exists(), "noise type and SNR of every test file (logfiles/log_testset.txt)")
+listen = Path.home() / "speech-enhancement-labs" / "tools" / "se_eval" / "listen_lists" / "vctk_demand_test.txt"
+line(listen.exists(), "the listening list (tools/se_eval/listen_lists/vctk_demand_test.txt)")
 
 print()
 if problems:
